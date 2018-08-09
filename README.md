@@ -1,20 +1,21 @@
 # bash-util-scripts
 
 
-## Backup
+## backup
 
-Generate tar.gz backup file with exclude work directories and files.
+Generate tar.gz backup file, exclude from file work directories and files.
 ```
-$ backup dir1 [dir2 ...]
+$ backup source_dir1 [source_dir2 ...]
 ```
 
+* Note: Exclude .DS_Store, .git/, node_modules/, build/, cache/, *.bak, *.swp
 
-## Optimize
+## optimize
 
-Optimize images JPG and PNG in the directory
+Optimize for Web images JPG and PNG in the source directory
 
 ```
-$ optimize dir
+$ optimize source_dir
 ```
 
 * Note: need install jpegoptim and pngquant

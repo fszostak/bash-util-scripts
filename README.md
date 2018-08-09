@@ -3,7 +3,7 @@
 
 ## backup
 
-Generate tar.gz backup file, exclude from file work directories and files.
+Backup file ("tar.gz") generator from specified source directories, work directories and files are excluded.
 ```
 $ backup source_dir1 [source_dir2 ...]
 ```
@@ -12,7 +12,7 @@ $ backup source_dir1 [source_dir2 ...]
 
 ## optimize
 
-Optimize for Web images JPG and PNG in the source directory
+Automated script for recursively web image files optimization.
 
 ```
 $ optimize source_dir

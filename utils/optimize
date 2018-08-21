@@ -25,6 +25,9 @@ trap ctrl_c INT
 
 while read FILE; do
 	OPT_FILE="${FILE}.opt"
+
+	[ ! -f "$FILE" ] && continue
+
 	ORIG_FSIZE=$(stat -f%z "$FILE")
 
 	$O_JPG --all-progressive --stdout -m85 "$FILE" > "$OPT_FILE"
@@ -44,7 +47,7 @@ while read FILE; do
 
 	echo
 done <<EOF
-$(find $IMAGES -name "*.jp*g" -type f)
+$(find $IMAGES -name "*.jp*g" -type f 2> /dev/null)
 EOF
 
 
@@ -52,6 +55,8 @@ EOF
 
 while read FILE; do
 	OPT_FILE="${FILE}.opt"
+	[ ! -f "$FILE" ] && continue
+
 	ORIG_FSIZE=$(stat -f%z "$FILE")
 
 	$O_PNG --quality=70-95 - < "$FILE" > "$OPT_FILE"
@@ -72,5 +77,5 @@ while read FILE; do
 
 	echo
 done <<EOF
-$(find $IMAGES -name "*.png" -type f)
+$(find $IMAGES -name "*.png" -type f 2> /dev/null)
 EOF

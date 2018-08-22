@@ -1,21 +1,21 @@
 # bash-util-scripts
 
 
-## backup
+## backup.sh
 
 Backup file ("tar.gz") generator from specified source directories, work directories and files are excluded.
 ```
-$ backup source_dir1 [source_dir2 ...]
+$ backup.sh source_dir1 [source_dir2 ...]
 ```
 
 * Note: Exclude .DS_Store, .git/, node_modules/, build/, cache/, *.bak, *.swp
 
-## optimize
+## optimize.sh
 
 Automated script for recursively web image files optimization.
 
 ```
-$ optimize source_dir
+$ optimize.sh source_dir
 ```
 
 * Requirements: install jpegoptim and pngquant

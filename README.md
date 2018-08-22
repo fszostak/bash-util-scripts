@@ -32,7 +32,7 @@ Install jpegoptim and pngquant:
 brew install jpegoptim pngquant
 ```
  
-And scripts to your PATH: 
+Add scripts to your PATH: 
 ```
 echo "export PATH=$PATH:~/bash-util-scripts/src" >> ~/.bash_profile
 ```

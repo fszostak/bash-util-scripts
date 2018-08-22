@@ -18,7 +18,8 @@ Automated script for recursively web image files optimization.
 $ optimize.sh source_dir
 ```
 
-* Requirements: install jpegoptim and pngquant
+### Requirements
+Install jpegoptim and pngquant
 
 On MacOS:
 

@@ -18,4 +18,21 @@ Automated script for recursively web image files optimization.
 $ optimize source_dir
 ```
 
-* Note: need install jpegoptim and pngquant
+* Requirements: install jpegoptim and pngquant
+
+On MacOS:
+
+Install brew: 
+```
+sudo /usr/bin/ruby -e "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install)"
+```
+
+Install jpegoptim and pngquant: 
+```
+brew install jpegoptim pngquant
+```
+ 
+And scripts to your PATH: 
+```
+cat "export PATH=$PATH:~/bash-util-scripts/src" > ~/.bash_profile
+```

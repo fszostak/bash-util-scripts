@@ -1,20 +1,21 @@
 #!/bin/bash
 
+# fszostak, Wed Aug 22 15:38:33 -03 2018
+
 function ctrl_c() {
 	echo "Aborted!!!"
 	[ -f $TAR ] && rm $TAR
 	exit
 }
 
-
-	# setup: brew install jpegoptim pngquant 
+# setup: brew install jpegoptim pngquant 
 
 O_JPG=jpegoptim
 O_PNG=pngquant
 
-IMAGES=$1
-if [ ! -d $IMAGES ]; then
-	echo "error: otimize <dir>"
+IMAGES="$1"
+if [ ! -d "$IMAGES" ]; then
+	echo "error: optimize.sh <dir>"
 	exit
 fi
 
@@ -47,7 +48,7 @@ while read FILE; do
 
 	echo
 done <<EOF
-$(find $IMAGES -name "*.jp*g" -type f 2> /dev/null)
+$(find "$IMAGES" -name "*.jp*g" -type f 2> /dev/null)
 EOF
 
 
@@ -77,5 +78,5 @@ while read FILE; do
 
 	echo
 done <<EOF
-$(find $IMAGES -name "*.png" -type f 2> /dev/null)
+$(find "$IMAGES" -name "*.png" -type f 2> /dev/null)
 EOF

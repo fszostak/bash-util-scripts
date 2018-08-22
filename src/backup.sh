@@ -1,11 +1,12 @@
 #!/bin/bash
 
+# fszostak, Wed Aug 22 15:39:17 -03 2018
+
 function ctrl_c() {
 	echo "Aborted!!!"
 	[ -f $TAR ] && rm $TAR
 	exit
 }
-
 
 
 DIR_LIST=()
@@ -45,6 +46,6 @@ if [ $NUM_DIRS -gt 0 ]; then
 		echo "success!!!"
 	fi
 else
-	echo "use: backup dir1 [dir2 ...]"
+	echo "use: backup.sh dir1 [dir2 ...]"
 fi
 

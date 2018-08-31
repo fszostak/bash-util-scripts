@@ -12,7 +12,7 @@ $ backup.sh source_dir1 [source_dir2 ...]
 
 ## docker.sh
 
-Shortcut to "docker exec -it <instance> /bin/bash".
+Shortcut to "docker exec -it instanceid /bin/bash".
 
 Example:
 

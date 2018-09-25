@@ -10,4 +10,4 @@ Example:
 $ ecs-get-ip.sh my-ecs-cluster
 ```
 
-Source: [a link](https://github.com/fszostak/bash-util-scripts/blob/master/src/ecs-get-ip.sh)
+Source: [ecs-get-ip.sh](https://github.com/fszostak/bash-util-scripts/blob/master/src/ecs-get-ip.sh)

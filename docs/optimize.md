@@ -29,3 +29,5 @@ Add scripts to your PATH:
 ```
 echo "export PATH=$PATH:~/bash-util-scripts/src" >> ~/.bash_profile
 ```
+
+Source: [optimize.sh](https://github.com/fszostak/bash-util-scripts/blob/master/src/optimize.sh)

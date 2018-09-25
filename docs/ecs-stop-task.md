@@ -18,4 +18,4 @@ Example (2):
 $ ecs-stop-task.sh my-ecs-cluster my-ecs-service
 ```
 
-Source: [a link](https://github.com/fszostak/bash-util-scripts/blob/master/src/ecs-stop-task.sh)
+Source: [ecs-stop-task.sh](https://github.com/fszostak/bash-util-scripts/blob/master/src/ecs-stop-task.sh)

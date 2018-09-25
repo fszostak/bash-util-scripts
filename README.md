@@ -7,8 +7,8 @@ bash scripts to make your work easier.
 - [optimize.sh - optimize your JPG and PNG image files](https://github.com/fszostak/bash-util-scripts/blob/master/docs/optimize.md).
 
 ## containers
-- [docker.sh - access your container quickly](https://github.com/fszostak/bash-util-scripts/blob/master/docs/docker.md).
+- [docker.sh - access your container shell quickly](https://github.com/fszostak/bash-util-scripts/blob/master/docs/docker.md).
 
 ## AWS
-- [ecs-stop-task.sh - Stop task from ECS FARGATE Cluster](https://github.com/fszostak/bash-util-scripts/blob/master/docs/ecs-stop-task.md).
-- [ecs-get-ip.sh - Get public IP from ECS FARGATE Task](https://github.com/fszostak/bash-util-scripts/blob/master/docs/ecs-get-ip.md).
+- [ecs-stop-task.sh - stop task from ECS FARGATE Cluster](https://github.com/fszostak/bash-util-scripts/blob/master/docs/ecs-stop-task.md).
+- [ecs-get-ip.sh - get public IP from ECS FARGATE Task](https://github.com/fszostak/bash-util-scripts/blob/master/docs/ecs-get-ip.md).

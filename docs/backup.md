@@ -10,3 +10,5 @@ $ backup.sh source_dir1 [source_dir2 ...]
 ```
 
 * Note: Exclude .DS_Store, .git/, node_modules/, build/, cache/, *.bak, *.swp
+
+Source: [backup.sh](https://github.com/fszostak/bash-util-scripts/blob/master/src/backup.sh)

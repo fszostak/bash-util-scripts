@@ -2,11 +2,11 @@
 
 bash scripts to make your work easier.
 
-## General scripts
+## Utilities
 - [backup.sh - make fast and clean backup from your local source code](https://github.com/fszostak/bash-util-scripts/blob/master/docs/backup.md).
 - [optimize.sh - optimize your JPG and PNG image files](https://github.com/fszostak/bash-util-scripts/blob/master/docs/optimize.md).
 
-## containers
+## Docker
 - [docker.sh - access your container shell quickly](https://github.com/fszostak/bash-util-scripts/blob/master/docs/docker.md).
 
 ## AWS

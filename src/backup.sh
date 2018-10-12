@@ -25,7 +25,7 @@ done
 # --- file and directories settings
 
 BACKUP_DIR=~/Backup/$(date '+%Y.%m')
-[ ! -d $BACKUP_DIR ] && mkdir $BACKUP_DIR
+[ ! -d $BACKUP_DIR ] && mkdir -p $BACKUP_DIR
 
 DIR=$1
 export TAR=$BACKUP_DIR/$(basename "$1").$(date '+%Y%m%d.%H%M%S').tar.gz

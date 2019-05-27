@@ -8,6 +8,14 @@ function ctrl_c() {
 	exit
 }
 
+function filesize() {
+	if [ "$(uname)" = "Linux" ]; then
+		return $(stat --printf="%s" "$1")
+	else
+		return $(stat -f%z "$1")
+	fi
+}
+
 # setup: brew install jpegoptim pngquant 
 
 O_JPG=jpegoptim
@@ -29,17 +37,14 @@ while read FILE; do
 
 	[ ! -f "$FILE" ] && continue
 
-	ORIG_FSIZE=$(stat -f%z "$FILE")
-
 	$O_JPG --all-progressive --stdout -m85 "$FILE" > "$OPT_FILE"
 
 	if [ $? -ne 0 ]; then
 		[ -f "$OPT_FILE" ] && rm "$OPT_FILE"
 		echo "error: jpegoptim failed for $FILE"
 	else
-		FSIZE=$(stat -f%z "$OPT_FILE")
-
-		if [ $FSIZE -gt 0 ]; then
+		filesize "$OPT_FILE"
+		if [ $? -gt 0 ]; then
 			mv "$OPT_FILE" "$FILE"
 		else
 			rm "$OPT_FILE"
@@ -58,7 +63,8 @@ while read FILE; do
 	OPT_FILE="${FILE}.opt"
 	[ ! -f "$FILE" ] && continue
 
-	ORIG_FSIZE=$(stat -f%z "$FILE")
+	filesize "$FILE"
+	ORIG_FSIZE=$?
 
 	$O_PNG --quality=70-95 - < "$FILE" > "$OPT_FILE"
 
@@ -66,7 +72,8 @@ while read FILE; do
 		[ -f "$OPT_FILE" ] && rm "$OPT_FILE"
 		echo "error: pngquant failed for $FILE"
 	else
-		FSIZE=$(stat -f%z "$OPT_FILE")
+		filesize "$OPT_FILE"
+		FSIZE=$?
 
 		if [ $FSIZE -gt 0 ]; then
 			mv "$OPT_FILE" "$FILE"

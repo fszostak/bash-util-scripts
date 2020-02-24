@@ -1,0 +1,76 @@
+#!/usr/bin/env bash
+
+. ~/scripts/.app-functions.sh
+
+AWS_PROFILE=$1
+AWS_PEM_FILE=~/.ssh/$1-prod.pem
+AWS_DEFAULT_USERNAME=ec2-user
+
+if [ $# -eq 1 ]; then
+  LAST=$(cat ~/.lastec2.$AWS_PROFILE  2> /dev/null)
+  if [ "$LAST" != "" ]; then
+    echo -ne "Login to last address [$LAST]? (y/N) "
+    read OPTION
+
+    if [ "$OPTION" = "y" ]; then
+      ssh -i $AWS_PEM_FILE $LAST
+      exit
+    fi
+  fi
+fi
+
+if [ "$1" != "" ]; then
+	echo -ne "One moment!!! Getting available EC2 instances..."
+	aws ec2 describe-instances \
+		--profile=$AWS_PROFILE \
+		--query 'Reservations[*].Instances[*].{Name:Tags[?Key==`Name`]|[0].Value,Instance:PublicIpAddress}' \
+    --output='text' > /tmp/ec2.tmp
+  if [ "$2" != "" ]; then
+    grep -i $2 /tmp/ec2.tmp > /tmp/ec2_.tmp
+    mv /tmp/ec2_.tmp /tmp/ec2.tmp
+  fi
+	EC2_LIST="$(cat /tmp/ec2.tmp \
+		| sort \
+		| awk \
+			'BEGIN {
+				count=1; 
+				print "#\tIP Address\tEnvironment";print "---\t--------------\t------------------------------------"
+			}
+			{
+			  if ($1 != "None") {
+			     if (count == 1) { isDefault="(default)"; } else { isDefault=""; }
+			     print count")\t"$1"\t"$2"\t"isDefault; 
+			     count++
+			  }
+			 }')"
+  rm /tmp/ec2.tmp
+
+	echo -ne "\rAWS EC2 instances for AWS_PROFILE=${AWS_PROFILE}                                     "
+	echo
+	echo
+	echo -ne "$EC2_LIST\n"
+	echo
+
+	echo -ne "${COLOR_WHITE}Type item number to connect or ENTER (default=1)${COLOR_NC} "
+	read OPTION
+
+	echo -ne "\nUsername: [$AWS_DEFAULT_USERNAME] "
+	read USERNAME
+	if [ "$USERNAME" = "" ]; then
+		USERNAME=$AWS_DEFAULT_USERNAME
+	fi
+
+  echo
+	echo -ne "\n${COLOR_WHITE}Connecting ${COLOR_NC}"
+	if [ "$OPTION" = "" ]; then
+		IP=$(echo "$EC2_LIST" | head -3 | tail -1 | cut -f2)
+	else
+		IP=$(echo "$EC2_LIST" | grep -Ei "^$OPTION)" | cut -f2)
+	fi
+
+	echo -ne "${COLOR_WHITE}$IP....${COLOR_NC}"
+
+  ssh -i $AWS_PEM_FILE $USERNAME@$IP
+  [ $? -eq 0 ] && echo "$USERNAME@$IP" > ~/.lastec2.$AWS_PROFILE
+fi
+

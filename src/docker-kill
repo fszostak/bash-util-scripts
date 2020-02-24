@@ -1,0 +1,8 @@
+#!/usr/bin/env bash
+
+while read CONTAINER
+do
+  docker kill $CONTAINER 
+done <<EOF
+$(docker ps | grep "$1" | cut -f1 -d' ')
+EOF

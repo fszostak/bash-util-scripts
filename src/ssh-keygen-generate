@@ -1,0 +1,45 @@
+#!/usr/bin/env bash
+
+# Script: ssh-keygen-publish
+# Maintainer: <fszostak@gmail.com>
+# Sat Nov  9 16:53:11 -03 2019
+
+echo
+if [ $# -eq 0 -o $# -gt 2 ]; then
+  echo "Usage: $(basename $0) <key_name> <user> <hostname>"
+  exit
+fi
+
+KEY_NAME=$1 
+USER=$2 
+HOSTNAME=$3 
+
+if [ -f ~/.ssh/$KEY_NAME.pem ]; then
+  echo "This key already exists"
+  exit
+fi
+
+[ ! -d ~/.ssh ] && mkdir ~/.ssh
+cd ~/.ssh
+[ $? -ne 0 ] && exit
+
+ssh-keygen -t rsa -f $KEY_NAME -P ""
+[ $? -ne 0 ] && exit
+
+mv $KEY_NAME $KEY_NAME.pem $KEY_NAME.pub
+[ $? -ne 0 ] && exit
+
+chmod 600 $KEY_NAME.pem
+[ $? -ne 0 ] && exit
+
+cat ~/.ssh/$KEY_NAME.pub | \
+  ssh $USER@$HOSTNAME "mkdir -p ~/.ssh && chmod 700 ~/.ssh && \
+  cat >>  ~/.ssh/authorized_keys"
+[ $? -ne 0 ] && exit
+
+echo "Private key: ~/.ssh/$KEYNAME.pem"
+echo "Public key:  ~/.ssh/$KEYNAME.pub"
+echo
+echo "Done."
+
+#@@@ end of script

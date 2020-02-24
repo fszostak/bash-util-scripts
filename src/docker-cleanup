@@ -1,0 +1,16 @@
+#!/usr/bin/env bash
+
+docker stop $(docker ps -aq)
+docker rm -v $(docker ps -a -q -f status=exited)
+
+docker rmi $(docker images -f "dangling=true" -q)
+
+echo y | docker container prune   # Remove all stopped containers
+echo y | docker volume prune      # Remove all unused volumes
+echo y | docker image prune       # Remove unused images
+echo y | docker system prune      # All of the above, in this order: containers, volumes, images
+
+echo y | docker system prune -a
+
+
+docker ps -a

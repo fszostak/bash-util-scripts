@@ -21,9 +21,23 @@ function filesize() {
 O_JPG=jpegoptim
 O_PNG=pngquant
 
+which $O_JPG > /dev/null
+if [ $? -ne 0 ]; then 
+  echo "Please install $O_JPG"
+  echo "On MacOS: brew install $O_JPG" 
+  return
+fi
+
+which $O_PNG > /dev/null
+if [ $? -ne 0 ]; then 
+  echo "Please install $O_PNG"
+  echo "On MacOS: brew install $O_PNG" 
+  
+fi
+
 IMAGES="$1"
 if [ ! -d "$IMAGES" ]; then
-	echo "error: optimize.sh <dir>"
+	echo "error: img-optimize <dir>"
 	exit
 fi
 

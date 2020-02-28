@@ -1,11 +1,10 @@
 #!/usr/bin/env bash
 
-# Script: ssh-keygen-publish
+# Script: ssh-keygen-generate
 # Maintainer: <fszostak@gmail.com>
-# Sat Nov  9 16:53:11 -03 2019
+# Fri Feb 28 15:50:49 -03 2020
 
-echo
-if [ $# -eq 0 -o $# -gt 2 ]; then
+if [ $# -ne 3 ]; then
   echo "Usage: $(basename $0) <key_name> <user> <hostname>"
   exit
 fi

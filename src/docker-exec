@@ -1,19 +1,21 @@
 #!/usr/bin/env bash
 
-. $(dirname $)/.app-functions.sh
+. ~/scripts/.app-functions.sh
 
 TMP=/tmp/$(basename $0).tmp
 
 docker ps | grep "$1 " > $TMP
 
-if [ $(wc -l $TMP) -eq 1 ]; then
-  docker exec -it $(cat $TMP | cut -f1 -d' ') bash
+if [ $(cat $TMP | wc -l) -eq 1 ]; then
+  echo "Container shell..."
+  docker exec -it $(cat $TMP | cut -f1 -d' ') bash 2> /dev/null
+  [ $? -ne 0 ] && docker exec -it $(cat $TMP | cut -f1 -d' ') sh
 else
-  cat $TMP
+  echo
   echo "Select one option using up/down keys and enter to confirm:"
 
   IFS=$'\n' 
-  options=($(cat $TMP | cut -c1-80))
+  options=($(cat $TMP | cut -c1-78))
   echo
 
   #options=("one" "two" "three")
@@ -23,7 +25,9 @@ else
   # echo "Choosen index = $choice"
   # echo "        value = ${options[$choice]}" 
 
-  docker exec -it $(echo ${options[$choice]} | cut -f1 -d' ') bash
+  echo "Container shell..."
+  docker exec -it $(echo ${options[$choice]} | cut -f1 -d' ') bash 2> /dev/null
+  [ $? -ne 0 ] && docker exec -it $(echo ${options[$choice]} | cut -f1 -d' ') sh
 fi
 
 rm $TMP

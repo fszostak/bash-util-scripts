@@ -1,4 +1,29 @@
 #!/usr/bin/env bash
 
-docker exec -it $(docker ps | grep $1 | cut -f1 -d' ' | head -1) bash
-[ $? -ne 0 ] && docker exec -it $(docker ps | grep $1 | cut -f1 -d' ' | head -1) sh
+. $(dirname $)/.app-functions.sh
+
+TMP=/tmp/$(basename $0).tmp
+
+docker ps | grep "$1 " > $TMP
+
+if [ $(wc -l $TMP) -eq 1 ]; then
+  docker exec -it $(cat $TMP | cut -f1 -d' ') bash
+else
+  cat $TMP
+  echo "Select one option using up/down keys and enter to confirm:"
+
+  IFS=$'\n' 
+  options=($(cat $TMP | cut -c1-80))
+  echo
+
+  #options=("one" "two" "three")
+  select_option "${options[@]}"
+  choice=$?
+
+  # echo "Choosen index = $choice"
+  # echo "        value = ${options[$choice]}" 
+
+  docker exec -it $(echo ${options[$choice]} | cut -f1 -d' ') bash
+fi
+
+rm $TMP

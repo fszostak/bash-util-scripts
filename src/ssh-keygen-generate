@@ -13,31 +13,32 @@ KEY_NAME=$1
 USER=$2 
 HOSTNAME=$3 
 
+[ ! -d ~/.ssh ] && mkdir ~/.ssh
+
 if [ -f ~/.ssh/$KEY_NAME.pem ]; then
   echo "This key already exists"
   exit
 fi
 
-[ ! -d ~/.ssh ] && mkdir ~/.ssh
 cd ~/.ssh
 [ $? -ne 0 ] && exit
 
-ssh-keygen -t rsa -f $KEY_NAME -P ""
+ssh-keygen -t rsa -f $KEY_NAME -P "" -C "$USER"
 [ $? -ne 0 ] && exit
 
-mv $KEY_NAME $KEY_NAME.pem $KEY_NAME.pub
+mv $KEY_NAME $KEY_NAME.pem
 [ $? -ne 0 ] && exit
 
 chmod 600 $KEY_NAME.pem
 [ $? -ne 0 ] && exit
 
-cat ~/.ssh/$KEY_NAME.pub | \
-  ssh $USER@$HOSTNAME "mkdir -p ~/.ssh && chmod 700 ~/.ssh && \
-  cat >>  ~/.ssh/authorized_keys"
-[ $? -ne 0 ] && exit
+#cat ~/.ssh/$KEY_NAME.pub | \
+  #ssh $USER@$HOSTNAME "mkdir -p ~/.ssh && chmod 700 ~/.ssh && \
+  #cat >>  ~/.ssh/authorized_keys"
+#[ $? -ne 0 ] && exit
 
-echo "Private key: ~/.ssh/$KEYNAME.pem"
-echo "Public key:  ~/.ssh/$KEYNAME.pub"
+echo "Private key: ~/.ssh/$KEY_NAME.pem"
+echo "Public key:  ~/.ssh/$KEY_NAME.pub"
 echo
 echo "Done."
 

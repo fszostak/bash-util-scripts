@@ -1,16 +1,30 @@
 #!/usr/bin/env bash
 
-docker stop $(docker ps -aq)
-docker rm -v $(docker ps -a -q -f status=exited)
+docker stop $(docker ps -aq) 2> /dev/null
 
-docker rmi $(docker images -f "dangling=true" -q)
+# Cleanup exited processes:
+docker rm -v $(docker ps -a -q -f status=exited) 2> /dev/null
 
-echo y | docker container prune   # Remove all stopped containers
-echo y | docker volume prune      # Remove all unused volumes
-echo y | docker image prune       # Remove unused images
-echo y | docker system prune      # All of the above, in this order: containers, volumes, images
+# Cleanup dangling volumes:
+docker volume rm $(docker volume ls -qf dangling=true) 2> /dev/null
 
-echo y | docker system prune -a
+# Cleanup dangling images:
+docker rmi $(docker images --filter "dangling=true" -q --no-trunc) 2> /dev/null
 
+if [ "$1" == 'all' ]; then 
+  # Remove all stopped containers
+  echo y | docker container prune  2> /dev/null
+  # Remove all unused volumes
+  echo y | docker volume prune  2> /dev/null
+  # Remove unused images
+  echo y | docker image prune  2> /dev/null
+  # All of the above, in this order: containers, volumes, images
+  echo y | docker system prune  2> /dev/null
+  echo y | docker system prune -a  2> /dev/null
+fi
 
+echo
 docker ps -a
+echo
+echo 'Run "docker-cleanup all" for full clean-up'
+echo

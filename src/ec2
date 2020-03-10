@@ -2,75 +2,155 @@
 
 . ~/scripts/.app-functions.sh
 
+if [ $# -eq 0 -o $# -gt 2 ]; then
+  echo "usaga: ec2 <pem-prefix> [<filter>]"
+  exit
+fi
+
+echo
+
 AWS_PROFILE=$1
 AWS_PEM_FILE=~/.ssh/$1-prod.pem
-AWS_DEFAULT_USERNAME=ec2-user
 
-if [ $# -eq 1 ]; then
-  LAST=$(cat ~/.lastec2.$AWS_PROFILE  2> /dev/null)
-  if [ "$LAST" != "" ]; then
-    echo -ne "Login to last address [$LAST]? (y/N) "
-    read OPTION
+if [ ! -f $AWS_PEM_FILE ]; then
+  echo "\"$AWS_PEM_FILE\" not found"
+  exit
+fi
 
-    if [ "$OPTION" = "y" ]; then
-      ssh -i $AWS_PEM_FILE $LAST
-      exit
+EC2_CONFIG=~/.ssh/ec2_config
+[ ! -f $EC2_CONFIG ] && touch $EC_CONFIG
+
+FILTER=$2
+NAME=""
+USERNAME=""
+
+EC2_FILTER=";$AWS_PROFILE;$FILTER;"
+
+if [ "$FILTER" != "" ]; then
+  
+  if [ $(grep "$EC2_FILTER" $EC2_CONFIG | wc -l) -gt 0 ]; then
+    COUNT=$(grep "$EC2_FILTER" $EC2_CONFIG | cut -f3 -d";")
+    IP=$(grep "$EC2_FILTER" $EC2_CONFIG | cut -f2 -d";")
+    NAME=$(grep "$EC2_FILTER" $EC2_CONFIG | cut -f6 -d";")
+    YN=""
+    if [ "$COUNT" != "" -a $COUNT -gt 1 ]; then
+      echo "You want access $NAME? (Y/n)"
+      read YN
+    fi
+    if [ "$YN" != "n" -a "$YN" != "N" ]; then
+      #echo "Checking $IP ..."
+      timeout 1 bash -c "</dev/tcp/$IP/22" > /dev/null 2>&1
+      if [ $? -eq 0 ]; then
+        USERNAME=$(grep "$EC2_FILTER" $EC2_CONFIG | cut -f1 -d";")
+      else
+        IP=""
+      fi
+    else
+      IP=""
+    fi
+  fi
+else
+  FILTER="-"
+fi
+
+if [ "$IP" == "" ]; then
+
+  echo -ne "   One moment!!! Loading available EC2 instances..."
+
+  # get active instances on AWS
+  aws ec2 describe-instances \
+      --profile=$AWS_PROFILE \
+      --query 'Reservations[*].Instances[*].{Name:Tags[?Key==`Name`]|[0].Value,Instance:PublicIpAddress}' \
+      --output='text' | grep -v -e "^None" > /tmp/ec2.tmp
+
+
+  echo -ne "\r                                                   \r"
+  # filter by second parameter
+  if [ "$FILTER" != "-" ]; then
+    grep -i $FILTER /tmp/ec2.tmp > /tmp/ec2_.tmp
+    mv /tmp/ec2_.tmp /tmp/ec2.tmp
+  fi
+  COUNT=$(cat /tmp/ec2.tmp | wc -l | sed "s/ //g")
+
+  if [ $COUNT -gt 1 ]; then
+    # order by name and first beanstalk instances
+    sort -k2 -t "	" /tmp/ec2.tmp > /tmp/ec2__.tmp
+    grep -v -e "env$" /tmp/ec2__.tmp > /tmp/ec2_.tmp
+    grep -e "env$" /tmp/ec2__.tmp > /tmp/ec2.tmp
+    cat /tmp/ec2_.tmp >> /tmp/ec2.tmp
+    rm /tmp/ec2_.tmp /tmp/ec2__.tmp
+
+    # format menu output
+    echo "   #   IP Address       Environment                                "
+    echo -ne "   --- ---------------- -----------------------------------"
+
+    IFS=$'\n' 
+    options=( 
+      $(cat /tmp/ec2.tmp \
+        | awk \
+        'BEGIN {
+          count=1;
+        }
+        {
+          if ($1 != "None") {
+            printf "%02d) %16s %-35s\n", count, $1, $2;
+            count++
+          }
+        }'
+      )
+    )
+    echo
+
+    # show menu
+    select_option "${options[@]}"
+    choice=$?
+    let choice=$choice+1
+
+    option="$(head -$choice /tmp/ec2.tmp | tail -1)"
+  else
+    option="$(cat /tmp/ec2.tmp)"
+  fi
+  NAME=$(echo "$option" | cut -f2 -d"	")
+  IP=$(echo "$option" | cut -f1 -d"	")
+fi
+
+if [ "$USERNAME" == "" ]; then
+  if [ -f $EC2_CONFIG ]; then
+    EC2_INFO=$(grep -e ";$FILTER;$NAME\$" $EC2_CONFIG)
+    if [ $? -eq 0 ]; then
+      USERNAME=$(echo $EC2_INFO | cut -f1 -d";")
     fi
   fi
 fi
 
-if [ "$1" != "" ]; then
-  echo -ne "One moment!!! Getting available EC2 instances..."
-  aws ec2 describe-instances \
-    --profile=$AWS_PROFILE \
-    --query 'Reservations[*].Instances[*].{Name:Tags[?Key==`Name`]|[0].Value,Instance:PublicIpAddress}' \
-    --output='text' > /tmp/ec2.tmp
-  if [ "$2" != "" ]; then
-    grep -i $2 /tmp/ec2.tmp > /tmp/ec2_.tmp
-    mv /tmp/ec2_.tmp /tmp/ec2.tmp
-  fi
-  EC2_LIST="$(cat /tmp/ec2.tmp \
-    | sort \
-    | awk \
-      'BEGIN {
-        count=1; 
-        print "#\tIP Address\tEnvironment";print "---\t--------------\t------------------------------------"
-      }
-      {
-        if ($1 != "None") {
-           if (count == 1) { isDefault="(default)"; } else { isDefault=""; }
-           print count")\t"$1"\t"$2"\t"isDefault; 
-           count++
-        }
-       }')"
-  rm /tmp/ec2.tmp
-
-  echo -ne "\rAWS EC2 instances for AWS_PROFILE=${AWS_PROFILE}                                     "
+# username
+IFS=' ' 
+if [ "$USERNAME" == "" ]; then
+  echo "  Select user"
   echo
-  echo
-  echo -ne "$EC2_LIST\n"
-  echo
-
-  echo -ne "${COLOR_WHITE}Type item number to connect or ENTER (default=1)${COLOR_NC} "
-  read OPTION
-
-  echo -ne "\nUsername: [$AWS_DEFAULT_USERNAME] "
-  read USERNAME
-  if [ "$USERNAME" = "" ]; then
-    USERNAME=$AWS_DEFAULT_USERNAME
-  fi
-
-  echo
-  echo -ne "\n${COLOR_WHITE}Connecting ${COLOR_NC}"
-  if [ "$OPTION" = "" ]; then
-    IP=$(echo "$EC2_LIST" | head -3 | tail -1 | cut -f2)
-  else
-    IP=$(echo "$EC2_LIST" | grep -Ei "^$OPTION)" | cut -f2)
-  fi
-
-  echo -ne "${COLOR_WHITE}$IP....${COLOR_NC}"
-
-  ssh -i $AWS_PEM_FILE $USERNAME@$IP
-  [ $? -eq 0 ] && echo "$USERNAME@$IP" > ~/.lastec2.$AWS_PROFILE
+  options=("ec2-user" "ubuntu")
+  select_option "${options[@]}"
+  choice=$?
+  USERNAME=${options[$choice]}
 fi
 
+# update EC2_CONFIG
+grep -v -e ";$FILTER;$NAME\$" $EC2_CONFIG > $EC2_CONFIG.tmp
+echo "$USERNAME;$IP;$COUNT;$AWS_PROFILE;$FILTER;$NAME" >> $EC2_CONFIG.tmp
+mv $EC2_CONFIG.tmp $EC2_CONFIG
+
+
+# connecting
+echo ""
+echo -ne "Connecting to ${COLOR_WHITE}$NAME${COLOR_NC} ($USERNAME@$IP)...."
+echo
+ssh -oStrictHostKeyChecking=no -i $AWS_PEM_FILE $USERNAME@$IP 2> /tmp/ec2.tmp
+
+if [ $(grep ' has changed and you have requested strict checking' /tmp/ec2.tmp | wc -l) -gt 0 ]; then
+  grep -v "$1" ~/.ssh/known_hosts > /tmp/known_hosts
+  cp /tmp/known_hosts ~/.ssh/known_hosts
+  rm /tmp/known_hosts
+  ssh --oStrictHostKeyChecking=no -i $AWS_PEM_FILE $USERNAME@$IP 2> /tmp/ec2.tmp
+fi
+
+rm /tmp/ec2.tmp

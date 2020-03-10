@@ -25,7 +25,7 @@ which $O_JPG > /dev/null
 if [ $? -ne 0 ]; then 
   echo "Please install $O_JPG"
   echo "On MacOS: brew install $O_JPG" 
-  return
+  exit
 fi
 
 which $O_PNG > /dev/null
@@ -37,7 +37,7 @@ fi
 
 IMAGES="$1"
 if [ ! -d "$IMAGES" ]; then
-	echo "error: img-optimize <dir>"
+	echo "usage: img-optimize <dir>"
 	exit
 fi
 

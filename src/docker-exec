@@ -9,6 +9,7 @@ docker ps | grep "$1 " > $TMP
 if [ $(cat $TMP | wc -l) -eq 1 ]; then
   echo "Container shell..."
   docker exec -it $(cat $TMP | cut -f1 -d' ') bash 2> /dev/null
+  echo $?
   [ $? -ne 0 ] && docker exec -it $(cat $TMP | cut -f1 -d' ') sh
 else
   echo

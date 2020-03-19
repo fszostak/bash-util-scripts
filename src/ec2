@@ -17,7 +17,8 @@ if [ ! -f $AWS_PEM_FILE ]; then
   exit
 fi
 
-EC2_CONFIG=~/.ssh/ec2_config
+TMP=/tmp/ec2.tmp
+EC2_CONFIG=~/.ssh/.ec2_config
 [ ! -f $EC2_CONFIG ] && touch $EC2_CONFIG
 
 FILTER=$2
@@ -62,24 +63,24 @@ if [ "$IP" == "" ]; then
   aws ec2 describe-instances \
       --profile=$AWS_PROFILE \
       --query 'Reservations[*].Instances[*].{Name:Tags[?Key==`Name`]|[0].Value,Instance:PublicIpAddress}' \
-      --output='text' | grep -v -e "^None" > /tmp/ec2.tmp
+      --output='text' | grep -v -e "^None" > $TMP
 
 
   echo -ne "\r                                                   \r"
   # filter by second parameter
   if [ "$FILTER" != "-" ]; then
-    grep -i $FILTER /tmp/ec2.tmp > /tmp/ec2_.tmp
-    mv /tmp/ec2_.tmp /tmp/ec2.tmp
+    grep -i $FILTER $TMP > $TMP.1
+    mv $TMP.1 $TMP
   fi
-  COUNT=$(cat /tmp/ec2.tmp | wc -l | sed "s/ //g")
+  COUNT=$(cat $TMP | wc -l | sed "s/ //g")
 
   if [ $COUNT -gt 1 ]; then
     # order by name and first beanstalk instances
-    sort -k2 -t "	" /tmp/ec2.tmp > /tmp/ec2__.tmp
-    grep -v -e "env$" /tmp/ec2__.tmp > /tmp/ec2_.tmp
-    grep -e "env$" /tmp/ec2__.tmp > /tmp/ec2.tmp
-    cat /tmp/ec2_.tmp >> /tmp/ec2.tmp
-    rm /tmp/ec2_.tmp /tmp/ec2__.tmp
+    sort -k2 -t "	" $TMP > $TMP.2
+    grep -v -e "env$" $TMP.2 > $TMP.1
+    grep -e "env$" $TMP.2 > $TMP
+    cat $TMP.1 >> $TMP
+    rm $TMP.1 $TMP.2
 
     # format menu output
     echo "   #   IP Address       Environment                                "
@@ -87,7 +88,7 @@ if [ "$IP" == "" ]; then
 
     IFS=$'\n' 
     options=( 
-      $(cat /tmp/ec2.tmp \
+      $(cat $TMP \
         | awk \
         'BEGIN {
           count=1;
@@ -107,9 +108,9 @@ if [ "$IP" == "" ]; then
     choice=$?
     let choice=$choice+1
 
-    option="$(head -$choice /tmp/ec2.tmp | tail -1)"
+    option="$(head -$choice $TMP | tail -1)"
   else
-    option="$(cat /tmp/ec2.tmp)"
+    option="$(cat $TMP)"
   fi
   NAME=$(echo "$option" | cut -f2 -d"	")
   IP=$(echo "$option" | cut -f1 -d"	")
@@ -145,14 +146,14 @@ mv $EC2_CONFIG.tmp $EC2_CONFIG
 echo ""
 echo -ne "Connecting to ${COLOR_WHITE}$NAME${COLOR_NC} ($USERNAME@$IP)...."
 echo
-ssh -oStrictHostKeyChecking=no -i $AWS_PEM_FILE $USERNAME@$IP 2> /tmp/ec2.tmp
+ssh -oStrictHostKeyChecking=no -i $AWS_PEM_FILE $USERNAME@$IP 2> $TMP
 
-if [ $(grep ' has changed and you have requested strict checking' /tmp/ec2.tmp | wc -l) -gt 0 ]; then
+if [ $(grep ' has changed and you have requested strict checking' $TMP | wc -l) -gt 0 ]; then
   grep -v "$1" ~/.ssh/known_hosts > /tmp/known_hosts
   cp /tmp/known_hosts ~/.ssh/known_hosts
   rm /tmp/known_hosts
   ssh --oStrictHostKeyChecking=no -i $AWS_PEM_FILE $USERNAME@$IP 2> /dev/null
 fi
 
-rm /tmp/ec2.tmp
+rm $TMP
 

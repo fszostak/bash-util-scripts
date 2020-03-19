@@ -18,7 +18,7 @@ if [ ! -f $AWS_PEM_FILE ]; then
 fi
 
 EC2_CONFIG=~/.ssh/ec2_config
-[ ! -f $EC2_CONFIG ] && touch $EC_CONFIG
+[ ! -f $EC2_CONFIG ] && touch $EC2_CONFIG
 
 FILTER=$2
 NAME=""
@@ -29,11 +29,12 @@ EC2_FILTER=";$AWS_PROFILE;$FILTER;"
 if [ "$FILTER" != "" ]; then
   
   if [ $(grep "$EC2_FILTER" $EC2_CONFIG | wc -l) -gt 0 ]; then
-    COUNT=$(grep "$EC2_FILTER" $EC2_CONFIG | cut -f3 -d";")
+    COUNT=$(grep "$EC2_FILTER" $EC2_CONFIG | head -1 | cut -f3 -d";")
     IP=$(grep "$EC2_FILTER" $EC2_CONFIG | cut -f2 -d";")
     NAME=$(grep "$EC2_FILTER" $EC2_CONFIG | cut -f6 -d";")
     YN=""
-    if [ "$COUNT" != "" -a $COUNT -gt 1 ]; then
+    [ "$COUNT" == "" ] && COUNT=0
+    if [ $COUNT -gt 1 ]; then
       echo "You want access $NAME? (Y/n)"
       read YN
     fi
@@ -150,7 +151,8 @@ if [ $(grep ' has changed and you have requested strict checking' /tmp/ec2.tmp |
   grep -v "$1" ~/.ssh/known_hosts > /tmp/known_hosts
   cp /tmp/known_hosts ~/.ssh/known_hosts
   rm /tmp/known_hosts
-  ssh --oStrictHostKeyChecking=no -i $AWS_PEM_FILE $USERNAME@$IP 2> /tmp/ec2.tmp
+  ssh --oStrictHostKeyChecking=no -i $AWS_PEM_FILE $USERNAME@$IP 2> /dev/null
 fi
 
 rm /tmp/ec2.tmp
+

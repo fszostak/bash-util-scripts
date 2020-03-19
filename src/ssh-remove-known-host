@@ -1,0 +1,5 @@
+#!/usr/bin/env bash
+
+grep -v "$1" ~/.ssh/known_hosts > /tmp/known_hosts
+cp /tmp/known_hosts ~/.ssh/known_hosts
+rm /tmp/known_hosts

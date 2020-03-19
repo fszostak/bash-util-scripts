@@ -1,0 +1,208 @@
+#!/usr/bin/env bash
+#-----------------------------
+# ssh-plus (2020) fszostak
+# Wed Mar 18 17:01:34 -03 2020
+
+. ~/scripts/.app-functions.sh
+
+if [ "$1" == "-h" ]; then
+  cat <<EOF
+
+usage: ssh-plus [-h] [-c] [<filter>]
+
+       -h  this informations
+       -c  select new connection method
+
+       [<filter>]  filter by host
+
+ssh-plus (2020) fszostak
+
+Read your ~/.ssh/config and make your server
+connections more easy. Manage tunnel enable/disable
+
+Example:
+
+Host server-gateway
+     User            debian
+     HostName        3.3.3.3
+     IdentityFile    ~/.ssh/server-gateway.pem
+
+Host server-1
+     User            debian
+     HostName        1.1.1.1
+     IdentityFile    ~/.ssh/server-1.pem
+     #ForwardAgent    yes
+     #ProxyCommand    ssh -W %h:%p server-gateway
+
+Host server-2
+     User            ubuntu
+     HostName        2.2.2.2
+     IdentityFile    ~/.ssh/server-2.pem
+     ForwardAgent    yes
+     ProxyCommand    ssh -W %h:%p server-gateway
+
+EOF
+
+  exit
+fi
+
+echo
+if [ "$1" == "-c" ]; then
+  CONNECT="-"
+  shift
+else
+  CONNECT=""
+fi
+
+FILTER=$1
+TMP=/tmp/ssh-plus.tmp
+SP_CONFIG=~/.ssh/.ssh-plus-config
+[ ! -f $SP_CONFIG ] && touch $SP_CONFIG
+
+NAME=""
+
+SP_FILTER=";$FILTER;"
+
+if [ "$FILTER" != "" ]; then
+  
+  if [ $(grep "$SP_FILTER" $SP_CONFIG | wc -l) -gt 0 ]; then
+    COUNT=$(grep "$SP_FILTER" $SP_CONFIG | head -1 | cut -f2 -d";")
+    [ "$CONNECT" != "-" ] && CONNECT=$(grep "$SP_FILTER" $SP_CONFIG | cut -f1 -d";")
+    NAME=$(grep "$SP_FILTER" $SP_CONFIG | cut -f4 -d";")
+    YN=""
+    [ "$COUNT" == "" ] && COUNT=0
+    if [ $COUNT -gt 1 ]; then
+      echo "You want access $NAME? (Y/n)"
+      read YN
+    fi
+  fi
+else
+  FILTER="-"
+fi
+
+if [ "$NAME" == "" ]; then
+
+  echo -ne "   Loading..."
+
+  # get active instances on AWS
+  grep -e "^Host[[:space:]][[:alnum:]].*$" ~/.ssh/config | sed -e 's/Host[ |\t]//g' | grep -v uhub | sort > $TMP
+  echo -ne "\r               \r"
+
+  if [ "$FILTER" != "-" ]; then
+    grep -i $FILTER $TMP > $TMP.$$
+    mv $TMP.$$ $TMP
+  fi
+
+  COUNT=$(cat $TMP | wc -l | sed "s/ //g")
+
+  if [ $COUNT -gt 1 ]; then
+    # format menu output
+    echo "   #   SSH Host                                                "
+    echo -ne "   ----------------------------------------------------"
+
+    IFS=$'\n' 
+    options=( 
+      $(cat $TMP)
+    )
+    echo
+
+    # show menu
+    select_option "${options[@]}"
+    choice=$?
+    let choice=$choice+1
+
+    option="$(head -$choice $TMP | tail -1)"
+  else
+    option="$(cat $TMP)"
+  fi
+  NAME=$(echo "$option" | awk "{ print $2 }")
+fi
+
+if [ "$CONNECT" == "" -a "$CONNECT" != "-" ]; then
+ if [ -f $SP_CONFIG ]; then
+    SP_INFO=$(grep -e ";$FILTER;$NAME\$" $SP_CONFIG)
+    if [ $? -eq 0 ]; then
+      CONNECT=$(echo $SP_INFO | cut -f1 -d";")
+    fi
+  fi
+fi
+
+# username
+IFS=' ' 
+if [ "$CONNECT" == "" -o "$CONNECT" == "-" ]; then
+  echo "  Select connection method:"
+  echo
+  options=("ssh" "tunnel")
+  select_option "${options[@]}"
+  choice=$?
+  CONNECT=${options[$choice]}
+fi
+
+# update SP_CONFIG
+grep -v -e ";$FILTER;$NAME\$" $SP_CONFIG > $SP_CONFIG.tmp
+echo "$CONNECT;$COUNT;$FILTER;$NAME" >> $SP_CONFIG.tmp
+mv $SP_CONFIG.tmp $SP_CONFIG
+
+OUT=/tmp/ssh-plus.out
+
+cat <<EOC | ex config
+/${NAME}$
+:.,.+6 wq! ${OUT}
+EOC
+
+N_LINES=0
+
+if [ -f $OUT ]; then
+  HAS_PROXY=$(grep -e '#ForwardAgent\|#ProxyCommand' $OUT | wc -l)
+
+  # CONNECT = direct
+  if [ "$CONNECT" == "tunnel" ]; then
+
+    # uncomment proxy settings
+    if [ $HAS_PROXY -ne 0 ]; then
+      N_LINES=5
+      cp  ~/.ssh/config ~/.ssh/config.bak
+      cat <<EOC | ex ~/.ssh/config
+/^Host.*${NAME}$
+/#
+. s /#ForwardAgent/ForwardAgent/g
+/#
+. s /#ProxyCommand/ProxyCommand/g
+x
+EOC
+    fi
+  
+  else  # CONNECT = ssh direct
+
+    # comment proxy settings
+    if [ $HAS_PROXY -eq 0 ]; then
+      N_LINES=5
+      cp  ~/.ssh/config ~/.ssh/config.bak
+      cat <<EOC | ex ~/.ssh/config
+/^Host.*${NAME}$
+/ForwardAgent
+. s /ForwardAgent/#ForwardAgent/g
+/ProxyCommand
+. s /ProxyCommand/#ProxyCommand/g
+x
+EOC
+
+    fi
+  fi
+fi
+
+if [ $N_LINES -gt 0 ]; then
+  echo "Using config entry:"
+  cat <<EOC | ex ~/.ssh/config
+/${NAME}$
+:.,.+${N_LINES} wq! ${OUT}
+EOC
+  cat $OUT
+fi
+[ -f $OUT ] && rm $OUT
+
+# connecting
+echo ""
+echo -ne "Connecting to ${COLOR_WHITE}$NAME${COLOR_NC}...."
+echo
+ssh $NAME 2> /dev/null

@@ -8,10 +8,11 @@
 if [ "$1" == "-h" ]; then
   cat <<EOF
 
-usage: ssh-plus [-h] [-c] [<filter>]
+usage: ssh-plus [-h|-a|-c] [<filter>]
 
        -h  this informations
-       -c  select new connection method
+       -a  add new host
+       -r  reset connection method
 
        [<filter>]  filter by host
 
@@ -47,7 +48,65 @@ EOF
 fi
 
 echo
-if [ "$1" == "-c" ]; then
+if [ "$1" == "-a" ]; then
+  echo "  Select environment type:"
+  echo
+  options=("PROD" "STAGING" "DEV" "DEVOPS" "LAB")
+  select_option "${options[@]}"
+  choice=$?
+  ADD_Environ==${options[$choice]}
+
+  echo "  Select cloud:"
+  echo
+  options=("aws" "gcloud" "azure" "digitalocean" "on-premisse")
+  select_option "${options[@]}"
+  choice=$?
+  ADD_Cloud==${options[$choice]}
+
+  echo
+  echo -n "Description: "
+  read ADD_Description
+
+  echo
+  echo "Type the ~/.ssh/config data:"
+  echo -n "Host: "
+  read ADD_Host
+  echo -n "  User: "
+  read ADD_User
+  echo -n "  Hostname or IP: "
+  read ADD_HostName
+  echo -n "  PEM file in your .ssh directory (ex.id_rsa.pem): "
+  read ADD_IdentityFile
+
+  if [ "$ADD_Host" == "" -o  \
+       "$ADD_User" == "" -o  \
+       "$ADD_HostName" == "" -o  \
+       "$ADD_IdentityFile" == "" ]; then
+    echo "Error: Insufficient parameters"
+    exit
+  fi 
+      
+  cat <<EOF >>~/.ssh/config
+
+#::  LAB / gcloud / gdpr-file-upload
+#;:
+Host ${ADD_Host}
+     User            ${ADD_User}
+     HostName        ${ADD_HostName}
+     IdentityFile    ~/.ssh/${ADD_IdentityFile}
+     #ForwardAgent    yes
+     #ProxyCommand    ssh -W %h:%p server-gateway
+
+EOF
+
+  echo
+  echo
+  echo "*** $ADD_Host added successfully. Try ssh $ADD_Host"
+  echo
+  exit
+fi
+
+if [ "$1" == "-r" ]; then
   CONNECT="-"
   shift
 else

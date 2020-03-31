@@ -4,31 +4,48 @@
 
 TMP=/tmp/$(basename $0).tmp
 
-docker ps | grep "$1 " > $TMP
+if [ "$1" == "-h" -o $# -gt 1 ]; then
+  echo "usage: docker-exec [<filter>]"
+  exit
+fi
 
-if [ $(cat $TMP | wc -l) -eq 1 ]; then
-  echo "Container shell..."
-  docker exec -it $(cat $TMP | cut -f1 -d' ') bash 2> /dev/null
-  echo $?
-  [ $? -ne 0 ] && docker exec -it $(cat $TMP | cut -f1 -d' ') sh
+if [ $# -eq 1 ]; then
+  docker ps | grep -e "$1\|CONTAINER" | cut -c1-50 > $TMP
+else
+  docker ps | cut -c1-50 > $TMP
+fi
+
+NUM_LINES=$(cat $TMP | wc -l)
+
+if [ $NUM_LINES -eq 1 ]; then
+  echo "No containers running"
+  exit
+fi
+
+if [ $NUM_LINES -eq 2 ]; then
+  cat $TMP
+  CONTAINER_ID=$(tail -1 $TMP | cut -f1 -d' ')
 else
   echo
   echo "Select one option using up/down keys and enter to confirm:"
 
   IFS=$'\n' 
-  options=($(cat $TMP | cut -c1-78))
+  options=($(cat $TMP))
   echo
 
-  #options=("one" "two" "three")
+  echo "   ${options[0]}"
+  unset -v 'options[0]'
   select_option "${options[@]}"
-  choice=$?
+  let choice=$?+1
 
-  # echo "Choosen index = $choice"
-  # echo "        value = ${options[$choice]}" 
+  CONTAINER_ID=$(echo ${options[$choice]} | cut -f1 -d' ')
+fi
 
-  echo "Container shell..."
-  docker exec -it $(echo ${options[$choice]} | cut -f1 -d' ') bash 2> /dev/null
-  [ $? -ne 0 ] && docker exec -it $(echo ${options[$choice]} | cut -f1 -d' ') sh
+echo "Running container bash..."
+docker exec -it $CONTAINER_ID bash
+if [ $? -eq 126 ]; then
+  echo "Running container sh..."
+  docker exec -it $CONTAINER_ID sh
 fi
 
 rm $TMP

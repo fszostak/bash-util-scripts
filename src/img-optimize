@@ -9,7 +9,7 @@ function ctrl_c() {
 }
 
 function filesize() {
-	if [ "$(uname)" = "Linux" ]; then
+	if [ "$(uname)" == "Linux" ]; then
 		return $(stat --printf="%s" "$1")
 	else
 		return $(stat -f%z "$1")

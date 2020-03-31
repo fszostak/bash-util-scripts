@@ -1,8 +1,47 @@
 #!/usr/bin/env bash
 
-while read CONTAINER
-do
-  docker kill $CONTAINER 
-done <<EOF
-$(docker ps | grep "$1" | cut -f1 -d' ')
-EOF
+. ~/scripts/.app-functions.sh
+
+TMP=/tmp/$(basename $0).tmp
+
+if [ "$1" == "-h" -o $# -gt 1 ]; then
+  echo "usage: docker-kill [<filter>]"
+  exit
+fi
+
+if [ $# -eq 1 ]; then
+  docker ps | grep -e "$1\|CONTAINER" | cut -c1-50 > $TMP
+else
+  docker ps | cut -c1-50 > $TMP
+fi
+
+NUM_LINES=$(cat $TMP | wc -l)
+
+if [ $NUM_LINES -eq 1 ]; then
+  echo "No containers running"
+  exit
+fi
+
+echo
+echo "DOCKER KILL"
+echo "Select one option using up/down keys and enter "
+echo "to confirm or CTRL-C to abort:"
+
+IFS=$'\n' 
+options=($(cat $TMP))
+echo
+
+echo "   ${options[0]}"
+unset -v 'options[0]'
+select_option "${options[@]}"
+let choice=$?+1
+
+CONTAINER_ID=$(echo ${options[$choice]} | cut -f1 -d' ')
+
+echo "Kill container..."
+docker kill $CONTAINER_ID 
+
+rm $TMP
+echo
+echo "CONTAINER RUNNING"
+docker ps

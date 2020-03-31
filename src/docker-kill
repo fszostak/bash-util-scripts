@@ -5,11 +5,15 @@
 TMP=/tmp/$(basename $0).tmp
 
 if [ "$1" == "-h" -o $# -gt 1 ]; then
-  echo "usage: docker-kill [<filter>]"
+  echo "usage: docker-kill [all|<filter>]"
+  echo "       options:"
+  echo "       all       kill all running containers"
+  echo "       <filter>  word for filter \"docker ps\" results"
   exit
 fi
 
-if [ $# -eq 1 ]; then
+
+if [ $# -eq 1 -a "$1" != "all" ]; then
   docker ps | grep -e "$1\|CONTAINER" | cut -c1-50 > $TMP
 else
   docker ps | cut -c1-50 > $TMP
@@ -22,21 +26,30 @@ if [ $NUM_LINES -eq 1 ]; then
   exit
 fi
 
-echo
-echo "DOCKER KILL"
-echo "Select one option using up/down keys and enter "
-echo "to confirm or CTRL-C to abort:"
+if [ "$1" == "all" ]; then
+  CONTAINER_ID=""
+  while read LINE; do
+    CONTAINER_ID="$CONTAINER_ID $(echo $LINE | cut -f1 -d' ')"
+  done <<EOF
+  $(grep -v "CONTAINER ID" $TMP)
+EOF
+else
+  echo
+  echo "DOCKER KILL"
+  echo "Select one option using up/down keys and enter "
+  echo "to confirm or CTRL-C to abort:"
 
-IFS=$'\n' 
-options=($(cat $TMP))
-echo
+  IFS=$'\n' 
+  options=($(cat $TMP))
+  echo
 
-echo "   ${options[0]}"
-unset -v 'options[0]'
-select_option "${options[@]}"
-let choice=$?+1
+  echo "   ${options[0]}"
+  unset -v 'options[0]'
+  select_option "${options[@]}"
+  let choice=$?+1
 
-CONTAINER_ID=$(echo ${options[$choice]} | cut -f1 -d' ')
+  CONTAINER_ID=$(echo ${options[$choice]} | cut -f1 -d' ')
+fi
 
 echo "Kill container..."
 docker kill $CONTAINER_ID 

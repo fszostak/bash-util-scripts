@@ -1,0 +1,17 @@
+#!/usr/bin/env bash
+#-----------------------------------
+# Extract package versions installed
+# in node_modules directory
+# Author: Fabio Szostak
+# Mon Mar 30 22:30:34 -03 2020
+
+if [ -d node_modules ]; then
+  cd node_modules/
+  echo '"dependencies": {' > npm-node_modules.recovered
+  find . -name package.json -depth 2 -exec grep '"_id"' {} \; | cut -f4 -d'"' | sort | sed "s/^/  \"/" | sed "s/$/\",/" | sed "s/@/\": \"/" >> npm-node_modules.recovered
+  echo '}' >> npm-node_modules.recovered
+  cat npm-node_modules.recovered
+  echo "File: node_modules.recovered"
+else
+  echo "Directory node_modules/ not found"
+fi

@@ -1,0 +1,38 @@
+#!/usr/bin/env bash
+#---------------------------
+# Sync two directories.
+# Author: Fabio Szostak
+# Tue Mar 31 02:07:28 -03 2020
+
+if [ $# -ne 2 ]; then
+  echo "usage: sync-dir <src> <dest>"
+  exit
+fi
+
+SRC=$1/
+DEST=$2
+
+if [ ! -d $SRC ]; then
+  echo "Source directory not found"
+  exit
+fi
+if [ ! -d $DEST ]; then
+  echo "Destination directory not found"
+  exit
+fi
+
+echo
+echo "CAUTION!!! Destination files that do not exist at"
+echo "the source will be removed."
+echo "Destination files may be lost."
+echo
+echo -ne "Are you sure? [y/N] "
+read OPTION
+if [ "$OPTION" == "y" -o "$OPTION" == "Y" ]; then
+  echo "SYNC DIRECTORIES..."
+  rsync -avhr $SRC $DEST --delete
+  if [ $? -eq 0 ]; then
+    echo "Success"
+  fi
+fi
+echo

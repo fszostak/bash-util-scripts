@@ -3,7 +3,13 @@
 . ~/scripts/.app-functions.sh
 
 if [ $# -eq 0 -o $# -gt 2 ]; then
-  echo "usaga: ec2 <pem-prefix> [<filter>]"
+  echo "usage: ec2 <aws-profile> [<filter>]"
+  echo "       options:"
+  echo "       <aws-profile>   do you need have a account instances access pem and"
+  echo "                       do you need have a account access pem and"
+  echo "                       and configure profile with \"aws configure --profile=name\""
+  echo "       example: for profile name \"customer\" you need have ~/.ssh/customer-prod.pem file"
+  echo "                try the command \"ec2 costumer\""
   exit
 fi
 

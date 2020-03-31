@@ -36,8 +36,10 @@ if [ $? -ne 0 ]; then
 fi
 
 IMAGES="$1"
-if [ ! -d "$IMAGES" ]; then
+if [ "$1" == "-h" -o ! -d "$IMAGES" ]; then
 	echo "usage: img-optimize <dir>"
+	echo "       optimize jpg and png images from directory,"
+	echo "       all images will be overwritted"
 	exit
 fi
 

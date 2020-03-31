@@ -1,5 +1,13 @@
 #!/usr/bin/env bash
 
+if [ "$1" == "-h" ]; then
+  echo "usage: docker-cleanup [all]"
+  echo "       options:"
+  echo "       all    to clean all docker resources"
+  echo "       example: docker-clean or docker-clean all"
+  exit
+fi
+
 docker stop $(docker ps -aq) 2> /dev/null
 
 # Cleanup exited processes:

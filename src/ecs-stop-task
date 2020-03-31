@@ -9,8 +9,8 @@
 # ---------------------------------------------
 
 if [ $# -eq 0 ]; then
-	echo "use: $0 <ecs-cluster-name> [<ecs-service-name>]"
-
+	echo "usage: $0 <ecs-cluster-name> [<ecs-service-name>]"
+  exit
 fi
 
 CLUSTER=$1

@@ -4,7 +4,7 @@
 # Author: Fabio Szostak
 # Tue Mar 31 02:07:28 -03 2020
 
-if [ $# -ne 2 ]; then
+if [ "$1" == "-h" -o $# -ne 2 ]; then
   echo "usage: sync-dir <src> <dest>"
   exit
 fi

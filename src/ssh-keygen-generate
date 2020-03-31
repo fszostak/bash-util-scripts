@@ -4,8 +4,8 @@
 # Maintainer: <fszostak@gmail.com>
 # Fri Feb 28 15:50:49 -03 2020
 
-if [ $# -ne 3 ]; then
-  echo "Usage: $(basename $0) <key_name> <user> <hostname>"
+if [ "$1" == "-h" -o $# -ne 3 ]; then
+  echo "usage: $(basename $0) <key_name> <user> <hostname>"
   exit
 fi
 

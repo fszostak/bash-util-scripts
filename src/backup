@@ -8,6 +8,13 @@ function ctrl_c() {
 	exit
 }
 
+if [ "$1" == "-h" ]; then
+  echo "usage: backup <dir1> [<dir2> [<dir3>] ...]"
+  echo "       options:"
+  echo "       directory list for add to backup"
+  echo "       example: backup my_project1 my_project2"
+  exit
+fi
 
 DIR_LIST=()
 

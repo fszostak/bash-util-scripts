@@ -23,7 +23,7 @@ $ echo 'export PATH=$PATH:~/scripts' >> ~/.bash_profile
 
 
 ## SSH
-- [ssh-plus - ssh connection menur from your ~/.ssh/config](https://github.com/fszostak/bash-util-scripts/blob/master/docs/ssh.md).
+- [ssh-plus - ssh connection menu from your ~/.ssh/config](https://github.com/fszostak/bash-util-scripts/blob/master/docs/ssh.md).
 - [ssh-keygen-generate - generate RSA keys](https://github.com/fszostak/bash-util-scripts/blob/master/docs/ssh.md).
 - [ssh-remove-known-host - remove IP from know_hosts](https://github.com/fszostak/bash-util-scripts/blob/master/docs/ssh.md).
 
@@ -37,8 +37,8 @@ $ echo 'export PATH=$PATH:~/scripts' >> ~/.bash_profile
 - [sync-dir - syncronize files and directories from source to destination](https://github.com/fszostak/bash-util-scripts/blob/master/docs/sync-dir.md).
 
 ## Docker
-- [docker-exec - access your container shell quickly](https://github.com/fszostak/bash-util-scripts/blob/master/docs/docker.md).
-- [docker-kill - kill containers](https://github.com/fszostak/bash-util-scripts/blob/master/docs/docker.md).
+- [docker-exec - running containers menu for shell access](https://github.com/fszostak/bash-util-scripts/blob/master/docs/docker.md).
+- [docker-kill - running containers menu for kill](https://github.com/fszostak/bash-util-scripts/blob/master/docs/docker.md).
 - [docker-cleanup - clean up your Docker environment](https://github.com/fszostak/bash-util-scripts/blob/master/docs/docker.md).
 
 ## AWS

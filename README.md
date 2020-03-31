@@ -36,7 +36,7 @@ $ echo 'export PATH=$PATH:~/scripts' >> ~/.bash_profile
 - [npm-modules-version - read node_modules directory and extract installed packages version TODO](https://github.com/fszostak/bash-util-scripts/blob/master/docs/npm-modules-version.md).
 - [listen - show listen ports TODO](https://github.com/fszostak/bash-util-scripts/blob/master/docs/listen.md).
 - [openssl-self-signed-certificate - generate HTTPS self signed certificate TODO](https://github.com/fszostak/bash-util-scripts/blob/master/docs/openssl-self-signed-certificate.md).
-- [sync-dir - syncronize files and directories from source to destination](https://github.com/fszostak/bash-util-scripts/blob/master/docs/sync-dir.md).
+- [sync-dir - syncronize files and directories from source to destination TODO](https://github.com/fszostak/bash-util-scripts/blob/master/docs/sync-dir.md).
 
 ## Docker
 - [docker-exec - running containers menu for shell access TODO](https://github.com/fszostak/bash-util-scripts/blob/master/docs/docker.md).

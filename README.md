@@ -21,6 +21,8 @@ $ echo 'export PATH=$PATH:~/scripts' >> ~/.bash_profile
 
 3) Reopen your terminal and try use any script
 
+> Note: all commands have -h option for help
+
 
 ## SSH
 - [ssh-plus - ssh connection menu from your ~/.ssh/config](https://github.com/fszostak/bash-util-scripts/blob/master/docs/ssh.md).

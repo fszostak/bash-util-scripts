@@ -1,27 +1,32 @@
 #!/usr/bin/env bash
 
+CHROME="/Applications/Google\ Chrome.app/Contents/MacOS/Google\ Chrome"
+
 . ~/scripts/.app-functions.sh
 
 if [ "$1" = "-h" -o ! -f ~/.appchromerc ]; then
-  echo
-  echo "usage: $(basename $0) [<app_name>]"
-  echo
-  echo "       <app_name>  [optional] app name to start"
-  echo
-  echo "       Create your ~/.chromerc"
-  echo
-  echo "       Format:"
-  echo "       app_name url width,height"
-  echo
-  echo "       Example ~/.chromerc:"
-  echo "       google | Google           ;https://www.google.com;"
-  echo "       social | Social Networks  ;https://www.twitter.com;"
-  echo "       social | Social Networks  ;https://www.facebook.com;"
-  echo
-  echo "       Execute:"
-  echo "       $(basename $0) social"
-  echo "       or"
-  echo "       $(basename $0)"
+  cat <<EOF
+
+usage: $(basename $0) [<app_name>]
+
+       <app_name>  [optional] app name to start
+
+       Create your ~/.chromerc
+
+       Format:
+       app_name | description;url;width,height;positionX,positionY;
+
+       Example ~/.chromerc:
+       google | Google           ;https://www.google.com;
+       social | Social Networks  ;https://www.twitter.com;800,600;100,100
+       social | Social Networks  ;https://www.facebook.com;
+
+       Execute:
+       $(basename $0) social
+       or
+       $(basename $0)
+
+EOF
   exit
 fi
 
@@ -57,11 +62,15 @@ do
 
   URL=$2
   SIZE=$3
-  #POSITION=$4
+  POSITION=$4
 
   echo "Starting Chrome => $URL ..."
 
-  nohup /Applications/Google\ Chrome.app/Contents/MacOS/Google\ Chrome --app="$URL" > /dev/null 2>&1 &
+  if [ "$SIZE" != "" ]; then
+    nohup $CHROME --app="data:text/html,<html><body><script>window.moveTo($POSITION);window.resizeTo($SIZE);window.location='$URL';</script></body></html>" > /dev/null 2>&1 &
+  else
+    nohup $CHROME --app="$URL" > /dev/null 2>&1 &
+  fi
 done <<EOF
 $(grep -e "^$APP " ~/.appchromerc)
 EOF

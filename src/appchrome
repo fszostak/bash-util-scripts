@@ -4,7 +4,9 @@
 
 if [ "$1" = "-h" -o ! -f ~/.appchromerc ]; then
   echo
-  echo "usage: $(basename $0) <app_name>"
+  echo "usage: $(basename $0) [<app_name>]"
+  echo
+  echo "       <app_name>  [optional] app name to start"
   echo
   echo "       Create your ~/.chromerc"
   echo
@@ -12,27 +14,36 @@ if [ "$1" = "-h" -o ! -f ~/.appchromerc ]; then
   echo "       app_name url width,height"
   echo
   echo "       Example ~/.chromerc:"
-  echo "       google https://google.com.br 500,500"
+  echo "       google | Google           ;https://www.google.com;"
+  echo "       social | Social Networks  ;https://www.twitter.com;"
+  echo "       social | Social Networks  ;https://www.facebook.com;"
   echo
   echo "       Execute:"
-  echo "       $(basename $0) google"
+  echo "       $(basename $0) social"
+  echo "       or"
+  echo "       $(basename $0)"
   exit
 fi
 
-echo
-echo "Select one option using up/down"
-echo "keys and enter to confirm:"
+if [ "$1" == "" ]; then
+  echo
+  echo "Select one option using up/down"
+  echo "keys and enter to confirm"
+  echo "or Ctrl-C to abort:"
 
-IFS=$'\n'
-options=($(cat ~/.appchromerc | cut -f1 -d";" | sort | uniq))
-echo
+  IFS=$'\n'
+  options=($(cat ~/.appchromerc | cut -f1 -d";" | sort | uniq))
+  echo
 
-echo "   ${options[0]}"
-unset -v 'options[0]'
-select_option "${options[@]}"
-let choice=$?+1
+  echo "   ${options[0]}"
+  unset -v 'options[0]'
+  select_option "${options[@]}"
+  let choice=$?+1
 
-APP=$(echo ${options[$choice]} | cut -f1 -d' ')
+  APP=$(echo ${options[$choice]} | cut -f1 -d' ')
+else
+  APP=$1
+fi
 
 if [ $(grep -e "^$APP " ~/.appchromerc | wc -l) -eq 0 ]; then
   echo "App \"$APP\" not found in ~/.chromerc"
@@ -48,9 +59,9 @@ do
   SIZE=$3
   #POSITION=$4
 
-  echo "Starting $URL ..."
+  echo "Starting Chrome => $URL ..."
 
-  /Applications/Google\ Chrome.app/Contents/MacOS/Google\ Chrome --app="$URL" --window-size=$SIZE 2>&1 /dev/null
+  nohup /Applications/Google\ Chrome.app/Contents/MacOS/Google\ Chrome --app="$URL" > /dev/null 2>&1 &
 done <<EOF
 $(grep -e "^$APP " ~/.appchromerc)
 EOF

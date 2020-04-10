@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 #---------------------------
-# Sync two directories.
+# Sync two directories with RSYNC.
 # Author: Fabio Szostak
 # Tue Mar 31 02:07:28 -03 2020
 

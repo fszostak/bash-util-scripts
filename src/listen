@@ -1,3 +1,6 @@
 #!/usr/bin/env bash
+#-----------------------------
+# listen (2020) fszostak
+# Wed Mar 31 17:01:34 -03 2020
 
 lsof -PiTCP -sTCP:LISTEN

@@ -1,4 +1,7 @@
 #!/usr/bin/env bash
+#-----------------------------
+# ssh-remove-known-host (2020) fszostak
+# Wed Mar 31 17:01:34 -03 2020
 
 grep -v "$1" ~/.ssh/known_hosts > /tmp/known_hosts
 cp /tmp/known_hosts ~/.ssh/known_hosts

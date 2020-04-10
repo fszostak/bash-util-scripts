@@ -1,4 +1,7 @@
 #!/usr/bin/env bash
+#-----------------------------
+# docker-cleanup (2020) fszostak
+# Wed Mar 31 17:01:34 -03 2020
 
 if [ "$1" == "-h" ]; then
   echo "usage: docker-cleanup [all]"

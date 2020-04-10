@@ -1,0 +1,104 @@
+#!/usr/bin/env bash
+#-----------------------------
+# applauch (2020) fszostak
+# Fri Apr 10 19:18:45 -03 2020
+
+CHROME="/Applications/Google\ Chrome.app/Contents/MacOS/Google\ Chrome"
+
+. ~/scripts/.app-functions.sh
+
+if [ "$1" = "-h" -o ! -f ~/.applaunchrc ]; then
+  cat <<EOF
+
+usage: $(basename $0) [<app_name>]
+
+       <app_name>  [optional] app name to start
+
+       Create your ~/.chromerc
+
+       Format:
+       app_name | description;url;width,height;positionX,positionY;
+
+       Example ~/.chromerc:
+       google | Google           ;https://www.google.com;
+       social | Social Networks  ;https://www.twitter.com;800,600;100,100
+       social | Social Networks  ;https://www.facebook.com;
+
+       Execute:
+       $(basename $0) social
+       or
+       $(basename $0)
+
+EOF
+  exit
+fi
+
+if [ "$1" == "" ]; then
+  echo
+  echo "Select one option using up/down"
+  echo "keys and enter to confirm"
+  echo "or Ctrl-C to abort:"
+
+  IFS=$'\n'
+  options=($(cat ~/.applaunchrc | grep -v -e "^$" | cut -f1 -d";" | sort | uniq))
+  echo
+
+  echo "   ${options[0]}"
+  unset -v 'options[0]'
+  select_option "${options[@]}"
+  let choice=$?+1
+
+  APP=$(echo ${options[$choice]} | cut -f1 -d' ')
+else
+  APP=$1
+fi
+
+if [ $(grep -e "^$APP " ~/.applaunchrc | wc -l) -eq 0 ]; then
+  echo "App \"$APP\" not found in ~/.chromerc"
+  exit
+fi
+
+while read APP_DATA
+do
+  IFS=";"
+  set - $APP_DATA
+
+  THIS_APP=$(echo "$1" | cut -f1 -d' ')
+  URL=$2
+  SIZE=$3
+  POSITION=$4
+
+  APP_TYPE=$(echo "$URL" | cut -f1 -d":")
+
+  # Chrome launch
+  if [ "$APP_TYPE" == "http" -o "$APP_TYPE" == "https" ]; then
+    if [ $(ps aux | grep "$URL" | grep -v grep | wc -l) -gt 0 ]; then
+      if [ "$SIZE" != "" ]; then
+        kill -9 $(ps aux | grep "$URL" | grep -v grep | awk '{print $2}')
+        [ $? -eq 0 ] && echo "$THIS_APP - $URL chrome was killed!!!"
+      else
+        echo "$THIS_APP - $URL already running!!!"
+        continue
+      fi
+    fi
+
+    echo "Starting $THIS_APP - $URL ..."
+
+    if [ "$SIZE" != "" ]; then
+      $CHROME --app="data:text/html,<html><body><script>window.moveTo($POSITION);window.resizeTo($SIZE);window.location='$URL';</script></body></html>" > /dev/null 2>&1 &
+    else
+      $CHROME --app="$URL" > /dev/null 2>&1 &
+    fi
+  fi
+
+  # bash command launch
+  if [ "$APP_TYPE" == "bash" ]; then
+    CMD=$(echo "$URL" | cut -f2 -d":")
+    echo "Starting $THIS_APP ..."
+    echo "\$ $CMD"
+    bash -c "$CMD"
+  fi
+
+done <<EOF
+$(grep -e "^$APP " ~/.applaunchrc)
+EOF

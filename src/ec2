@@ -1,4 +1,7 @@
 #!/usr/bin/env bash
+#-----------------------------
+# ec2 (2020) fszostak
+# Wed Mar 31 17:01:34 -03 2020
 
 . ~/scripts/.app-functions.sh
 

@@ -1,6 +1,7 @@
 #!/bin/bash
-
-# fszostak, Wed Aug 22 15:39:17 -03 2018
+#-----------------------------
+# backup (2018) fszostak
+# Wed Aug 22 15:39:17 -03 2018
 
 function ctrl_c() {
 	echo "Aborted!!!"

@@ -1,0 +1,34 @@
+#!/usr/bin/env bash
+
+
+if [ "$1" = "-h" -o "$1" = "" ]; then
+  echo
+  echo "usage: $(basename $0) [-h] [-n <color-name>] [<color-hex-code>]"
+  echo
+  echo "       -h print this screen"
+  echo "       -n <color-name>   find colors by name"
+  echo "       <color-hex-code>  find colors by hexadecimal code"
+  echo
+  exit
+fi
+
+COLOR_DATA=$(dirname $0)/.color.dat
+
+if [ "$1" = "-n" ]; then
+  echo "aqui"
+  grep -i "$2" $COLOR_DATA
+  exit
+fi
+
+# hex code in lowercase
+COLOR=$(echo "$1" | sed 's/#//g' | tr '[:upper:]' '[:lower:]')
+
+# get line number
+let LN_START=$(echo -ne "$COLOR\n$(cat $COLOR_DATA)" | sort -k1,6 | uniq | grep -Fni $COLOR | tail -1 | cut -f1 -d:)-1
+let LN_END=$LN_START+2
+
+GREP_OPTIONS='--color=always'
+GREP_COLOR='1;35;40'
+
+# show color name
+[ $LN_START -gt 0 ] && sed -n "${LN_START},${LN_END}p" $COLOR_DATA

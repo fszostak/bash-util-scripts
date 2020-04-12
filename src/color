@@ -8,6 +8,7 @@ if [ "$1" = "-h" -o "$1" = "" ]; then
   echo "       -h print this screen"
   echo "       -n <color-name>   find colors by name"
   echo "       <color-hex-code>  find colors by hexadecimal code"
+  echo "                         (without #)"
   echo
   exit
 fi
@@ -15,20 +16,30 @@ fi
 COLOR_DATA=$(dirname $0)/.color.dat
 
 if [ "$1" = "-n" ]; then
-  echo "aqui"
   grep -i "$2" $COLOR_DATA
   exit
 fi
 
 # hex code in lowercase
 COLOR=$(echo "$1" | sed 's/#//g' | tr '[:upper:]' '[:lower:]')
+echo "Search Color Hex Code #$COLOR"
 
-# get line number
-let LN_START=$(echo -ne "$COLOR\n$(cat $COLOR_DATA)" | sort -k1,6 | uniq | grep -Fni $COLOR | tail -1 | cut -f1 -d:)-1
-let LN_END=$LN_START+2
-
-GREP_OPTIONS='--color=always'
 GREP_COLOR='1;35;40'
 
+grep --color=always $COLOR $COLOR_DATA
+
 # show color name
-[ $LN_START -gt 0 ] && sed -n "${LN_START},${LN_END}p" $COLOR_DATA
+if [ $? -eq 0 ]; then
+  echo "Color found!"
+else
+  # get line number
+  let LN_START=$(echo -ne "$COLOR\n$(cat $COLOR_DATA)" | sort -k1,6 | grep -Fni $COLOR | tail -1 | cut -f1 -d:)-2
+  let LN_END=$LN_START+3
+  if [ $LN_START -ne 0 ]; then
+    [ $LN_START -lt 0 ] && LN_START=1
+    echo "Color not found, See nearest colors:"
+    sed -n "${LN_START},${LN_END}p" $COLOR_DATA
+  else
+    echo "Color not found"
+  fi
+fi

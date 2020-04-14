@@ -35,18 +35,21 @@ fi
 
 if [ "$1" == "" ]; then
   echo
-  echo "Select one option using up/down"
-  echo "keys and enter to confirm"
-  echo "or Ctrl-C to abort:"
+  echo "   Select one option using up/down"
+  echo "   keys and enter to confirm:"
 
   IFS=$'\n'
-  options=($(cat ~/.applaunchrc | grep -v -e "^$" | cut -f1 -d";" | sort | uniq))
+
+  options=( "Continue" $(cat ~/.applaunchrc | grep -v -e "^$" | grep -v -e "ˆ# "| cut -f1 -d";" | sort -t '|' -k2 | uniq))
   echo
 
-  echo "   ${options[0]}"
-  unset -v 'options[0]'
   select_option "${options[@]}"
-  let choice=$?+1
+  let choice=$?
+
+  if [ $choice -eq 0 ]; then
+      echo
+      exit
+  fi
 
   APP=$(echo ${options[$choice]} | cut -f1 -d' ')
 else

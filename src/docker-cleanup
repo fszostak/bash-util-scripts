@@ -11,31 +11,32 @@ if [ "$1" == "-h" ]; then
   exit
 fi
 
-docker stop $(docker ps -aq) 2> /dev/null
+docker stop $(docker ps -aq) > /dev/null 2>&1
 
 # Cleanup exited processes:
-docker rm -v $(docker ps -a -q -f status=exited) 2> /dev/null
+docker rm -v $(docker ps -a -q -f status=exited) > /dev/null 2>&1
 
 # Cleanup dangling volumes:
-docker volume rm $(docker volume ls -qf dangling=true) 2> /dev/null
+docker volume rm $(docker volume ls -qf dangling=true) > /dev/null 2>&1
 
 # Cleanup dangling images:
-docker rmi $(docker images --filter "dangling=true" -q --no-trunc) 2> /dev/null
+docker rmi $(docker images --filter "dangling=true" -q --no-trunc) > /dev/null 2>&1
 
 if [ "$1" == 'all' ]; then 
   # Remove all stopped containers
-  echo y | docker container prune  2> /dev/null
+  echo y | docker container prune  > /dev/null 2>&1
   # Remove all unused volumes
-  echo y | docker volume prune  2> /dev/null
+  echo y | docker volume prune  > /dev/null 2>&1
   # Remove unused images
-  echo y | docker image prune  2> /dev/null
+  echo y | docker image prune  > /dev/null 2>&1
   # All of the above, in this order: containers, volumes, images
-  echo y | docker system prune  2> /dev/null
-  echo y | docker system prune -a  2> /dev/null
+  echo y | docker system prune  > /dev/null 2>&1
+  echo y | docker system prune -a  > /dev/null 2>&1
 fi
 
 echo
 docker ps -a
 echo
-echo 'Run "docker-cleanup all" for full clean-up'
+docker system df
 echo
+[  "$1" != "all" ] && echo 'Run "docker-cleanup all" for full clean-up'

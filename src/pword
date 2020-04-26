@@ -1,0 +1,45 @@
+#!/usr/bin/env bash
+
+if [ $# -lt 2 -o $# -gt 3 ]; then
+  echo "usage: $(basename $0) [-a] service-name username"
+  echo "       -a             to add nem password"
+  echo "       service-name   service name. ex dockerhub"
+  echo "       user-name      user name. ex myaccount"
+  exit
+fi
+
+[ ! -d ~/.pword ] && mkdir ~/.pword
+
+if [ ! -f ~/.pword/.seed.pword ]; then
+  echo -e "Seed: "
+  read SEED
+  echo "$SEED" > ~/.pword/.seed.pword
+else
+  SEED="$(cat ~/.pword/.seed.pword)"
+fi
+
+if [ "$1" = "-a" ]; then
+  SERVICE=$2
+  USER=$3
+
+  if [ -f ~/.pword/$SERVICE-$USER.pword ]; then
+    echo "Password already exists"
+    exit
+  fi
+
+  echo -e "Password: "
+  read PWORD
+  echo "$PWORD" | openssl aes-256-cbc -pass pass:$SEED -a -in /dev/stdin -out ~/.pword/$SERVICE-$USER.pword
+else
+  SERVICE=$1
+  USER=$2
+
+  if [ ! -f ~/.pword/$SERVICE-$USER.pword ]; then
+    echo "Password not exists"
+    exit
+  fi
+
+  openssl aes-256-cbc -pass pass:$SEED -d -a -in ~/.pword/$SERVICE-$USER.pword -out /dev/stdout 
+fi
+
+

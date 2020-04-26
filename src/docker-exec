@@ -10,9 +10,9 @@ if [ "$1" == "-h" -o $# -gt 1 ]; then
 fi
 
 if [ $# -eq 1 ]; then
-  docker ps | grep -e "$1\|CONTAINER" | cut -c1-50 > $TMP
+  docker ps | grep -e "$1\|CONTAINER" | cut -c1-49 > $TMP
 else
-  docker ps | cut -c1-50 > $TMP
+  docker ps | cut -c1-49 > $TMP
 fi
 
 NUM_LINES=$(cat $TMP | wc -l)

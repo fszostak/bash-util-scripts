@@ -58,7 +58,7 @@ echo "Removing docker selected images..."
 bash -c "docker rmi $IMAGE_ID -f"
 echo
 echo "Removing docker dangling images..."
-bash -c 'docker rmi -f $(docker images -f "dangling=true" -q)'
+bash -c 'docker rmi -f $(docker images -f "dangling=true" -q)' > /dev/null 2>&1
 
 rm $TMP
 echo

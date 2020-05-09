@@ -16,48 +16,58 @@ if [ "$1" == "-h" -o $# -gt 1 ]; then
 fi
 
 
-if [ $# -eq 1 -a "$1" != "all" ]; then
-  docker ps | grep -e "$1\|CONTAINER" | cut -c1-50 > $TMP
-else
-  docker ps | cut -c1-50 > $TMP
-fi
+while true
+do
+  if [ $# -eq 1 -a "$1" != "all" ]; then
+    docker ps | grep -e "$1\|CONTAINER" | cut -c1-50 > $TMP
+  else
+    docker ps | cut -c1-50 | grep -v "CONTAINER" > $TMP
+  fi
 
-NUM_LINES=$(cat $TMP | wc -l)
+  clear
 
-if [ $NUM_LINES -eq 1 ]; then
-  echo "No containers running"
-  exit
-fi
+  NUM_LINES=$(cat $TMP | wc -l)
 
-if [ "$1" == "all" ]; then
-  CONTAINER_ID=""
-  while read LINE; do
-    CONTAINER_ID="$CONTAINER_ID $(echo $LINE | cut -f1 -d' ')"
-  done <<EOF
-  $(grep -v "CONTAINER ID" $TMP)
+  if [ $NUM_LINES -eq 1 ]; then
+    echo "No containers running"
+    exit
+  fi
+
+  if [ "$1" == "all" ]; then
+    CONTAINER_ID=""
+    while read LINE; do
+      CONTAINER_ID="$CONTAINER_ID $(echo $LINE | cut -f1 -d' ')"
+    done <<EOF
+    $(grep -v "CONTAINER ID" $TMP)
 EOF
-else
-  echo
-  echo "DOCKER KILL"
-  echo "Select one option using up/down keys and enter "
-  echo "to confirm or CTRL-C to abort:"
+    echo "Killing all containers..."
+    docker kill $CONTAINER_ID 
+  else
+    msg_bold "  docker-kill (2020) by fszostak"
+    echo
+    echo "  Select one container to kill using up/down keys"
+    echo "  and press key enter or return to confirm:"
 
-  IFS=$'\n' 
-  options=($(cat $TMP))
-  echo
+    IFS=$'\n' 
+    options=("--- <exit> ---" $(cat $TMP))
+    echo
 
-  echo "   ${options[0]}"
-  unset -v 'options[0]'
-  select_option "${options[@]}"
-  let choice=$?+1
+    select_option "${options[@]}"
+    let choice=$?
 
-  CONTAINER_ID=$(echo ${options[$choice]} | cut -f1 -d' ')
-fi
+    if [ $choice -eq 0 ]; then
+      echo
+      break
+    fi
 
-echo "Kill container..."
-docker kill $CONTAINER_ID 
+    CONTAINER_ID=$(echo ${options[$choice]} | cut -f1 -d' ')
+
+    echo "Killing container..."
+    docker kill $CONTAINER_ID 
+
+    press_continue
+  fi
 
 rm $TMP
-echo
-echo "CONTAINER RUNNING"
-docker ps
+done
+

@@ -15,52 +15,63 @@ if [ "$1" == "-h" -o $# -gt 1 ]; then
   exit
 fi
 
-
-if [ $# -eq 1 -a "$1" != "all" ]; then
-  docker images | grep -e "$1\|REPOSITORY" | cut -c1-61 > $TMP
-else
-  docker images | cut -c1-62 > $TMP
+if [ -f docker-compose.yml ]; then
+    docker-compose down
 fi
 
-NUM_LINES=$(cat $TMP | wc -l)
-
-if [ $NUM_LINES -eq 1 ]; then
-  echo "No images found"
-  exit
-fi
-
-if [ "$1" == "all" ]; then
-  IMAGE_ID=""
-  while read LINE; do
-    IMAGE_ID="$IMAGE_ID $(echo $LINE | cut -c50-61)"
-  done <<EOF
-  $(grep -v "REPOSITORY" $TMP)
-EOF
-else
-  echo
-  echo "DOCKER RMI"
-  echo "Select one option using up/down keys and enter "
-  echo "to confirm or CTRL-C to abort:"
-
-  IFS=$'\n' 
-  options=($(cat $TMP))
-  echo
-
-  echo "   ${options[0]}"
-  unset -v 'options[0]'
-  select_option "${options[@]}"
-  let choice=$?+1
-
-  IMAGE_ID=$(echo ${options[$choice]} | cut -c50-62)
-fi
-
-echo "Removing docker selected images..."
-bash -c "docker rmi $IMAGE_ID -f"
 echo
 echo "Removing docker dangling images..."
 bash -c 'docker rmi -f $(docker images -f "dangling=true" -q)' > /dev/null 2>&1
 
-rm $TMP
-echo
-#echo "IMAGES AVAILABLE"
-#docker images
+while true
+do
+  if [ $# -eq 1 -a "$1" != "all" ]; then
+    docker images | grep -e "$1\|REPOSITORY" | cut -c1-75 | sort > $TMP
+  else
+    docker images | cut -c1-75 | grep -v "REPOSITORY" | sort > $TMP
+  fi
+
+  NUM_LINES=$(cat $TMP | wc -l)
+
+  if [ $NUM_LINES -eq 0 ]; then
+    echo "No images found"
+    exit
+  fi
+
+  if [ "$1" == "all" ]; then
+    IMAGE_ID=""
+    while read LINE; do
+      IMAGE_ID="$IMAGE_ID $(echo $LINE | awk '{print $3}')"
+    done <<EOF
+$(grep -v "REPOSITORY" $TMP)
+EOF
+  else
+    clear
+    msg_bold "   docker-rmi (2020) by fszostak"
+    echo
+    echo "   select one image to remove using up/down keys"
+    echo "   and confirm option with enter or return key"
+
+    IFS=$'\n' 
+    options=("--- <exit> ---" $(cat $TMP))
+    echo
+
+    #echo "   ${options[0]}"
+    #unset -v 'options[0]'
+    select_option "${options[@]}"
+    let choice=$?
+
+    if [ $choice -eq 0 ]; then
+        echo
+        break
+    fi
+    IMAGE_ID=$(echo ${options[$choice]} | awk '{print $3}')
+  fi
+
+  echo "Removing docker selected images..."
+  bash -c "docker rmi $IMAGE_ID -f"
+  rm $TMP
+  echo
+
+  press_continue
+done

@@ -12,7 +12,7 @@ fi
 if [ $# -eq 1 ]; then
   docker ps | grep -e "$1\|CONTAINER" | cut -c1-49 > $TMP
 else
-  docker ps | cut -c1-49 > $TMP
+  docker ps | cut -c1-49 | grep -v "CONTAINER" > $TMP
 fi
 
 NUM_LINES=$(cat $TMP | wc -l)
@@ -22,21 +22,24 @@ if [ $NUM_LINES -eq 1 ]; then
   exit
 fi
 
+clear
+
 if [ $NUM_LINES -eq 2 ]; then
   cat $TMP
   CONTAINER_ID=$(tail -1 $TMP | cut -f1 -d' ')
 else
   echo
-  echo "Select one option using up/down keys and enter to confirm:"
+  msg_bold "  docker-exec (2020) by fszostak"
+  echo
+  echo "  Select one app using up/down"
+  echo "  keys and enter or return to confirm:"
 
   IFS=$'\n' 
-  options=($(cat $TMP))
+  options=("--- <exit> ---" $(cat $TMP))
   echo
 
-  echo "   ${options[0]}"
-  unset -v 'options[0]'
   select_option "${options[@]}"
-  let choice=$?+1
+  let choice=$?
 
   CONTAINER_ID=$(echo ${options[$choice]} | cut -f1 -d' ')
 fi

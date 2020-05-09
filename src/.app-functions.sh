@@ -199,4 +199,8 @@ function select_option {
     return $selected
 }
 
+press_continue() {
+  msg  "Press key enter or return to continue..." 'cyan'
+  read -t3
+}
 #eof# app-functions.sh

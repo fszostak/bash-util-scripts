@@ -33,75 +33,85 @@ EOF
   exit
 fi
 
-if [ "$1" == "" ]; then
-  echo
-  echo "   Select one option using up/down"
-  echo "   keys and enter to confirm:"
+FILTER=$1
 
-  IFS=$'\n'
+while true
+do
+  if [ "$FILTER" == "" ]; then
+    echo
+    msg_bold "  applaunch (2020) by fszostak"
+    echo
+    echo "  Select one app using up/down"
+    echo "  keys and enter or return to confirm:"
 
-  options=( "Continue" $(cat ~/.applaunchrc | grep -v -e "^$" | grep -v -e "ˆ# "| cut -f1 -d";" | sort -t '|' -k2 | uniq))
-  echo
+    IFS=$'\n'
 
-  select_option "${options[@]}"
-  let choice=$?
+    options=( "--- <exit> ---" $(cat ~/.applaunchrc | grep -v -e "^$" | grep -v -e "ˆ# "| cut -f1 -d";" | sort -t '|' -k2 | uniq))
+    echo
 
-  if [ $choice -eq 0 ]; then
-      echo
-      exit
+    select_option "${options[@]}"
+    let choice=$?
+
+    if [ $choice -eq 0 ]; then
+        echo
+        break
+    fi
+
+    APP=$(echo ${options[$choice]} | awk '{print $1}')
+  else
+    APP=$FILTER
   fi
 
-  APP=$(echo ${options[$choice]} | cut -f1 -d' ')
-else
-  APP=$1
-fi
+  if [ $(grep -e "^$APP " ~/.applaunchrc | wc -l) -eq 0 ]; then
+    echo "App \"$APP\" not found in ~/.chromerc"
+    exit
+  fi
 
-if [ $(grep -e "^$APP " ~/.applaunchrc | wc -l) -eq 0 ]; then
-  echo "App \"$APP\" not found in ~/.chromerc"
-  exit
-fi
+  while read APP_DATA
+  do
+    IFS=";"
+    set - $APP_DATA
 
-while read APP_DATA
-do
-  IFS=";"
-  set - $APP_DATA
+    THIS_APP=$(echo "$FILTER" | cut -f1 -d' ')
+    URL=$2
+    SIZE=$3
+    POSITION=$4
 
-  THIS_APP=$(echo "$1" | cut -f1 -d' ')
-  URL=$2
-  SIZE=$3
-  POSITION=$4
+    APP_TYPE=$(echo "$URL" | cut -f1 -d":")
 
-  APP_TYPE=$(echo "$URL" | cut -f1 -d":")
+    # Chrome launch
+    if [ "$APP_TYPE" == "http" -o "$APP_TYPE" == "https" ]; then
+      if [ $(ps aux | grep "$URL" | grep -v grep | wc -l) -gt 0 ]; then
+        if [ "$SIZE" != "" ]; then
+          kill -9 $(ps aux | grep "$URL" | grep -v grep | awk '{print $2}')
+          [ $? -eq 0 ] && echo "$THIS_APP - $URL chrome was killed!!!"
+        else
+          echo "$THIS_APP - $URL already running!!!"
+          press_continue
+          continue
+        fi
+      fi
 
-  # Chrome launch
-  if [ "$APP_TYPE" == "http" -o "$APP_TYPE" == "https" ]; then
-    if [ $(ps aux | grep "$URL" | grep -v grep | wc -l) -gt 0 ]; then
+      echo "Starting $THIS_APP - $URL ..."
+
       if [ "$SIZE" != "" ]; then
-        kill -9 $(ps aux | grep "$URL" | grep -v grep | awk '{print $2}')
-        [ $? -eq 0 ] && echo "$THIS_APP - $URL chrome was killed!!!"
+        $CHROME --app="data:text/html,<html><body><script>window.moveTo($POSITION);window.resizeTo($SIZE);window.location='$URL';</script></body></html>" > /dev/null 2>&1 &
       else
-        echo "$THIS_APP - $URL already running!!!"
-        continue
+        $CHROME --app="$URL" > /dev/null 2>&1 &
       fi
     fi
 
-    echo "Starting $THIS_APP - $URL ..."
-
-    if [ "$SIZE" != "" ]; then
-      $CHROME --app="data:text/html,<html><body><script>window.moveTo($POSITION);window.resizeTo($SIZE);window.location='$URL';</script></body></html>" > /dev/null 2>&1 &
-    else
-      $CHROME --app="$URL" > /dev/null 2>&1 &
+    # bash command launch
+    if [ "$APP_TYPE" == "bash" ]; then
+      CMD=$(echo "$URL" | cut -f2 -d":")
+      echo "Starting $THIS_APP ..."
+      echo "\$ $CMD"
+      bash -c "$CMD"
     fi
-  fi
+    
+    press_continue
 
-  # bash command launch
-  if [ "$APP_TYPE" == "bash" ]; then
-    CMD=$(echo "$URL" | cut -f2 -d":")
-    echo "Starting $THIS_APP ..."
-    echo "\$ $CMD"
-    bash -c "$CMD"
-  fi
-
-done <<EOF
-$(grep -e "^$APP " ~/.applaunchrc)
+  done <<EOF
+  $(grep -e "^$APP " ~/.applaunchrc)
 EOF
+done

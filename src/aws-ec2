@@ -1,0 +1,172 @@
+#!/usr/bin/env bash
+#-----------------------------
+# aws-ec2 (2020) fszostak
+# Wed Mar 31 17:01:34 -03 2020
+
+. ~/scripts/.app-functions.sh
+
+if [ $# -eq 0 -o $# -gt 2 ]; then
+  echo "usage: aws-ec2 <aws-profile> [<filter>]"
+  echo "       options:"
+  echo "       <aws-profile>   do you need have a account instances access pem and"
+  echo "                       do you need have a account access pem and"
+  echo "                       and configure profile with \"aws configure --profile=name\""
+  echo "       example: for profile name \"customer\" you need have ~/.ssh/customer-prod.pem file"
+  echo "                try the command \"ec2 costumer\""
+  exit
+fi
+
+echo
+
+AWS_PROFILE=$1
+AWS_PEM_FILE=~/.ssh/$1-prod.pem
+
+if [ ! -f $AWS_PEM_FILE ]; then
+  echo "\"$AWS_PEM_FILE\" not found"
+  exit
+fi
+
+TMP=/tmp/ec2.tmp
+EC2_CONFIG=~/.ssh/.ec2_config
+[ ! -f $EC2_CONFIG ] && touch $EC2_CONFIG
+
+FILTER=$2
+NAME=""
+USERNAME=""
+
+EC2_FILTER=";$AWS_PROFILE;$FILTER;"
+
+if [ "$FILTER" != "" ]; then
+  
+  if [ $(grep "$EC2_FILTER" $EC2_CONFIG | wc -l) -gt 0 ]; then
+    COUNT=$(grep "$EC2_FILTER" $EC2_CONFIG | head -1 | cut -f3 -d";")
+    IP=$(grep "$EC2_FILTER" $EC2_CONFIG | cut -f2 -d";")
+    NAME=$(grep "$EC2_FILTER" $EC2_CONFIG | cut -f6 -d";")
+    YN=""
+    [ "$COUNT" == "" ] && COUNT=0
+    if [ $COUNT -gt 1 ]; then
+      echo "You want access $NAME? (Y/n)"
+      read YN
+    fi
+    if [ "$YN" != "n" -a "$YN" != "N" ]; then
+      #echo "Checking $IP ..."
+      timeout 1 bash -c "</dev/tcp/$IP/22" > /dev/null 2>&1
+      if [ $? -eq 0 ]; then
+        USERNAME=$(grep "$EC2_FILTER" $EC2_CONFIG | cut -f1 -d";")
+      else
+        IP=""
+      fi
+    else
+      IP=""
+    fi
+  fi
+else
+  FILTER="-"
+fi
+
+if [ "$IP" == "" ]; then
+
+  echo -ne "   One moment!!! Loading available EC2 instances..."
+
+  # get active instances on AWS
+  aws ec2 describe-instances \
+      --profile=$AWS_PROFILE \
+      --query 'Reservations[*].Instances[*].{Name:Tags[?Key==`Name`]|[0].Value,Instance:PublicIpAddress}' \
+      --output='text' | grep -v -e "^None" > $TMP
+
+
+  echo -ne "\r                                                   \r"
+  # filter by second parameter
+  if [ "$FILTER" != "-" ]; then
+    grep -i $FILTER $TMP > $TMP.1
+    mv $TMP.1 $TMP
+  fi
+  COUNT=$(cat $TMP | wc -l | sed "s/ //g")
+
+  if [ $COUNT -gt 1 ]; then
+    # order by name and first beanstalk instances
+    sort -k2 -t "	" $TMP > $TMP.2
+    grep -v -e "env$" $TMP.2 > $TMP.1
+    grep -e "env$" $TMP.2 > $TMP
+    cat $TMP.1 >> $TMP
+    rm $TMP.1 $TMP.2
+
+    # format menu output
+    clear
+    msg_bold "   aws-ec2 (2020) by fszostak"
+    echo
+    echo
+    echo "   #   ip-address       environment-name                           "
+    echo -ne "   --- ---------------- -----------------------------------"
+
+    IFS=$'\n' 
+    options=( 
+      $(cat $TMP \
+        | awk \
+        'BEGIN {
+          count=1;
+        }
+        {
+          if ($1 != "None") {
+            printf "%02d) %16s %-35s\n", count, $1, $2;
+            count++
+          }
+        }'
+      )
+    )
+    echo
+
+    # show menu
+    select_option "${options[@]}"
+    choice=$?
+    let choice=$choice+1
+
+    option="$(head -$choice $TMP | tail -1)"
+  else
+    option="$(cat $TMP)"
+  fi
+  NAME=$(echo "$option" | cut -f2 -d"	")
+  IP=$(echo "$option" | cut -f1 -d"	")
+fi
+
+if [ "$USERNAME" == "" ]; then
+  if [ -f $EC2_CONFIG ]; then
+    EC2_INFO=$(grep -e ";$FILTER;$NAME\$" $EC2_CONFIG)
+    if [ $? -eq 0 ]; then
+      USERNAME=$(echo $EC2_INFO | cut -f1 -d";")
+    fi
+  fi
+fi
+
+# username
+IFS=' ' 
+if [ "$USERNAME" == "" ]; then
+  echo "  Select user"
+  echo
+  options=("ec2-user" "ubuntu")
+  select_option "${options[@]}"
+  choice=$?
+  USERNAME=${options[$choice]}
+fi
+
+# update EC2_CONFIG
+grep -v -e ";$FILTER;$NAME\$" $EC2_CONFIG > $EC2_CONFIG.tmp
+echo "$USERNAME;$IP;$COUNT;$AWS_PROFILE;$FILTER;$NAME" >> $EC2_CONFIG.tmp
+mv $EC2_CONFIG.tmp $EC2_CONFIG
+
+
+# connecting
+echo ""
+echo -ne "Connecting to ${COLOR_WHITE}$NAME${COLOR_NC} ($USERNAME@$IP)...."
+echo
+ssh -oStrictHostKeyChecking=no -i $AWS_PEM_FILE $USERNAME@$IP #2> $TMP
+
+if [ $(grep ' has changed and you have requested strict checking' $TMP | wc -l) -gt 0 ]; then
+  grep -v "$1" ~/.ssh/known_hosts > /tmp/known_hosts
+  cp /tmp/known_hosts ~/.ssh/known_hosts
+  rm /tmp/known_hosts
+  ssh --oStrictHostKeyChecking=no -i $AWS_PEM_FILE $USERNAME@$IP #2> /dev/null
+fi
+
+rm $TMP
+

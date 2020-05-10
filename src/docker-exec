@@ -22,20 +22,18 @@ if [ $NUM_LINES -eq 1 ]; then
   exit
 fi
 
-clear
-
 if [ $NUM_LINES -eq 2 ]; then
   cat $TMP
   CONTAINER_ID=$(tail -1 $TMP | cut -f1 -d' ')
 else
-  echo
+  clear
   msg_bold "  docker-exec (2020) by fszostak"
   echo
   echo "  Select one app using up/down"
   echo "  keys and enter or return to confirm:"
 
   IFS=$'\n' 
-  options=("--- <exit> ---" $(cat $TMP))
+  options=("--- continue ---" $(cat $TMP))
   echo
 
   select_option "${options[@]}"

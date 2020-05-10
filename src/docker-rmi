@@ -53,7 +53,7 @@ EOF
     echo "   and confirm option with enter or return key"
 
     IFS=$'\n' 
-    options=("--- <exit> ---" $(cat $TMP))
+    options=("--- continue ---" $(cat $TMP))
     echo
 
     #echo "   ${options[0]}"

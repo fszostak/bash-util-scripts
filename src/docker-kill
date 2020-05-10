@@ -24,7 +24,6 @@ do
     docker ps | cut -c1-50 | grep -v "CONTAINER" > $TMP
   fi
 
-  clear
 
   NUM_LINES=$(cat $TMP | wc -l)
 
@@ -43,13 +42,14 @@ EOF
     echo "Killing all containers..."
     docker kill $CONTAINER_ID 
   else
+    clear
     msg_bold "  docker-kill (2020) by fszostak"
     echo
     echo "  Select one container to kill using up/down keys"
     echo "  and press key enter or return to confirm:"
 
     IFS=$'\n' 
-    options=("--- <exit> ---" $(cat $TMP))
+    options=("--- continue ---" $(cat $TMP))
     echo
 
     select_option "${options[@]}"

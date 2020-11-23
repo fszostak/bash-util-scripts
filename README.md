@@ -13,7 +13,7 @@ $ git clone https://github.com/fszostak/bash-util-scripts
 $ ln -s ~/Workspaces/bash-util-scripts/src ~/scripts
 ```
 
-2) Add to scripts directory to your $PATH
+2) Add scripts directory to your $PATH
 
 ```
 $ echo 'export PATH=$PATH:~/scripts' >> ~/.bash_profile

@@ -22,6 +22,10 @@ docker volume rm $(docker volume ls -qf dangling=true) > /dev/null 2>&1
 # Cleanup dangling images:
 docker rmi $(docker images --filter "dangling=true" -q --no-trunc) > /dev/null 2>&1
 
+if [ "$1" == 'volumes' -a $(docker volume ls | grep local | wc -l) -gt 0 ]; then 
+  docker-compose down
+  docker volume rm $(docker volume ls | grep local | awk '{ print $2;}')
+fi
 if [ "$1" == 'all' ]; then 
   # Remove all stopped containers
   echo y | docker container prune  > /dev/null 2>&1
@@ -39,4 +43,4 @@ docker ps -a
 echo
 docker system df
 echo
-[  "$1" != "all" ] && echo 'Run "docker-cleanup all" for full clean-up'
+[  "$1" != "all" ] && echo 'Run "docker-cleanup all" for full clean-up or docker-cleanup volumes for remove local volumes'

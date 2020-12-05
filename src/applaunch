@@ -43,7 +43,7 @@ if [ "$FILTER" == "" ]; then
 
   IFS=$'\n'
 
-  options=( "--- continue ---" $(cat ~/.applaunchrc | grep -v -e "^$" | grep -v -e "ˆ# "| cut -f1 -d";" | sort -t '|' -k2 | uniq))
+  options=( $(cat ~/.applaunchrc | grep -v -e "^$" | grep -v -e "ˆ# "| cut -f1 -d";" | sort -t '|' -k2 | uniq))
   echo
 
   select_option "${options[@]}"

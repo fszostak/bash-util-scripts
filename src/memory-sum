@@ -1,0 +1,15 @@
+#!/usr/bin/env bash
+#-----------------------------
+# memory-sum (2020) fszostak
+# Wed Mar 31 17:01:34 -03 2020
+
+
+if [ ! -f Dockerrun.aws.json ]; then
+  echo "usage: memory-sum"
+  echo "       Dockerrun.aws.json file needed in current path."
+  exit
+fi
+
+echo
+echo "Memory usage for containers = $(grep memory Dockerrun.aws.json|cut -f2 -d":" | cut -f1 -d',' | awk '{s+=$1} END {print s}')"
+echo

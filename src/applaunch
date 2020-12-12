@@ -4,27 +4,34 @@
 # Fri Apr 10 19:18:45 -03 2020
 
 CHROME="/Applications/Google\ Chrome.app/Contents/MacOS/Google\ Chrome"
+FIREFOX="/Applications/Firefox.app/Contents/MacOS/firefox"
+SAFARI="/Applications/Safari.app/Contents/MacOS/Safari"
 
 . ~/scripts/.app-functions.sh
 
 if [ "$1" = "-h" -o ! -f ~/.applaunchrc ]; then
   cat <<EOF
 
-usage: $(basename $0) [<app_name>]
+usage: $(basename $0) [-g] [<app_name>]
 
-       <app_name>  [optional] app name to start
+       <app_name>       [optional] app name to start
+       -g <group_name>  [optional] group name to start
 
        Create your ~/.applaunchrc
 
        Format:
-       app_name | description;url;width,height;positionX,positionY;
+       app_name | description;group;url;width,height;positionX,positionY;
 
-       Example ~/.chromerc:
-       google | Google           ;https://www.google.com;
-       twitter| Twitter          ;https://www.twitter.com;800,600;100,100
+       Example ~/.applaunchrc:
+       google   | Google           ;;https://www.google.com;800,600;100,100
+       twitter  | Twitter          ;social;https://www.twitter.com;
+       facebook | Facebook         ;social;https://www.facebook.com;
+       mozilla  | Mozila           ;;https://www.mozilla.org;
 
        Execute:
-       $(basename $0) twitter
+       $(basename $0) google
+       or
+       $(basename $0) -g social
        or
        $(basename $0)
 
@@ -32,9 +39,16 @@ EOF
   exit
 fi
 
+if [ "$1" = "-g" ]; then
+  APPGROUP=$1
+  shift
+else
+  APPGROUP=''
+fi
+
 FILTER=$1
 
-if [ "$FILTER" == "" ]; then
+if [ "$FILTER" = "" ]; then
   echo
   msg_bold "  applaunch (2020) by fszostak"
   echo
@@ -59,20 +73,27 @@ else
   APP=$FILTER
 fi
 
-if [ $(grep -e "^$APP " ~/.applaunchrc | wc -l) -eq 0 ]; then
-  echo "App \"$APP\" not found in ~/.chromerc"
-  exit
+if [ "$APPGROUP" = "" ]; then
+  if [ $(grep -e "$APP" ~/.applaunchrc | wc -l) -eq 0 ]; then
+    echo "App \"$APP\" not found in ~/.applaunchrc"
+    exit
+  fi
+else
+  if [ $(grep -e ";$APP;" ~/.applaunchrc | wc -l) -eq 0 ]; then
+    echo "Group \"$APP\" not found in ~/.applaunchrc"
+    exit
+  fi
 fi
-
 while read APP_DATA
 do
   IFS=";"
   set - $APP_DATA
 
   THIS_APP=$(echo "$FILTER" | cut -f1 -d' ')
-  URL=$2
-  SIZE=$3
-  POSITION=$4
+  APP_GROUP=$2
+  URL=$3
+  SIZE=$4
+  POSITION=$5
 
   APP_TYPE=$(echo "$URL" | cut -f1 -d":")
 
@@ -81,7 +102,7 @@ do
     if [ $(ps aux | grep "$URL" | grep -v grep | wc -l) -gt 0 ]; then
       if [ "$SIZE" != "" ]; then
         kill -9 $(ps aux | grep "$URL" | grep -v grep | awk '{print $2}')
-        [ $? -eq 0 ] && echo "$THIS_APP - $URL chrome was killed!!!"
+        [ $? -eq 0 ] && echo "$THIS_APP - $URL browser was killed!!!"
       else
         echo "$THIS_APP - $URL already running!!!"
         continue
@@ -91,7 +112,20 @@ do
     echo "Starting $THIS_APP - $URL ..."
 
     if [ "$SIZE" != "" ]; then
-       $CHROME --app="data:text/html,<html><body><script>window.moveTo($POSITION);window.resizeTo($SIZE);window.location='$URL';</script></body></html>" > /dev/null 2>&1 &
+      WIDTH=$(echo $SIZE | cut -f1 -d',')
+      HEIGHT=$(echo $SIZE | cut -f2 -d',')
+      POSX=$(echo $POSITION | cut -f1 -d',')
+      POSY=$(echo $POSITION | cut -f2 -d',')
+    else
+      WIDTH=800
+      HEIGHT=600
+      POSX=50
+      POSY=50
+    fi
+
+    if [ "$SIZE" != "" ]; then
+       APP_PARM="data:text/html,<html><body><script>window.moveTo($POSITION);window.resizeTo($SIZE);window.location='$URL';</script></body></html>" 
+       $CHROME --app="$APP_PARM" > /dev/null 2>&1 &
     else
        $CHROME --app="$URL" > /dev/null 2>&1 &
     fi
@@ -106,5 +140,6 @@ do
   fi
   
 done <<EOF
-$(grep -e "^$APP " ~/.applaunchrc)
+$(grep -e "$APP " ~/.applaunchrc)
+$(grep -e ";$APP;" ~/.applaunchrc)
 EOF

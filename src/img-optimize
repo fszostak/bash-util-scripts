@@ -83,7 +83,7 @@ while read FILE; do
 	filesize "$FILE"
 	ORIG_FSIZE=$?
 
-	$O_PNG --quality=70-95 - < "$FILE" > "$OPT_FILE"
+	$O_PNG --quality=80-95 - < "$FILE" > "$OPT_FILE"
 
 	if [ $? -ne 0 ]; then
 		[ -f "$OPT_FILE" ] && rm "$OPT_FILE"

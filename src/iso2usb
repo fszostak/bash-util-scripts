@@ -1,0 +1,24 @@
+#!/usr/bin/env bash
+# iso2usb - create bootable usb with ISO or IMG file.
+# Fabio Szostak
+# Fri Jan 22 20:45:39 -03 2021
+
+if [ $# -eq 0 ]; then
+  echo "usage: $(basename $0) <file.iso>"
+  echo
+  echo "*** Tested in MacOS BigSuri ***"
+  echo
+  exit
+fi
+
+echo "You want continue? Will LOST files in /dev/disk2 (Ctrl-C to abort)"
+read
+sudo diskutil eraseDisk FAT32 USB MBRFormat /dev/disk2
+[ $? -ne 0 ] && exit
+
+sudo diskutil unmountDisk /dev/disk2
+[ $? -ne 0 ] && exit
+
+echo "Writing to /dev/rdisk2"
+sudo dd if=$1 of=/dev/rdisk2 bs=4m
+sudo diskutil eject /dev/disk2

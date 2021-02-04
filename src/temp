@@ -1,6 +1,11 @@
 #!/usr/bin/env bash
 
-
 if [ "$(uname)" = "Darwin" ]; then
   sudo powermetrics --samplers smc |grep -i "CPU die temperature"
+else
+  while true; do 
+    sensors | egrep "Core|Package"
+    sleep 10
+    clear
+  done
 fi

@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-# ssh-tunnel.sh
+# ssh-tunnel
 # Fabio Szostak
 # Sun 28 Feb 2021 12:55:20 PM -03
 #
@@ -31,7 +31,7 @@ EOF
 fi
 
 if [ $# -eq 1 ]; then
-	L_PORT=$1
+	R_PORT=$1
 fi
 
 GATEWAY_HOST=
@@ -42,7 +42,7 @@ if [ $# -eq 3 ]; then
 	R_PORT=$3
 fi
 
-KILL=$(lsof -i :$R_PORT | grep LISTEN | head -1 | awk '{ print $2 }')
+KILL=$(lsof -i ":$R_PORT" | grep LISTEN | head -1 | awk '{ print $2 }')
 
 if [ "$KILL" != "" ]; then
 	kill $KILL

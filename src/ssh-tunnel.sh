@@ -1,13 +1,22 @@
 #!/usr/bin/env bash
 
-# tunnel.sh
+# ssh-tunnel.sh
 # Fabio Szostak
 # Sun 28 Feb 2021 12:55:20 PM -03
+#
+# setup: sudo apt install sshuttle
+
+type sshuttle > /dev/null
+if [ $? -eq 1 ]; then
+	echo "Installing sshuttle..."
+	sudo apt install sshuttle
+	[ $? -ne 0 ] && exit
+fi
 
 if [ $# -eq 0 ]; then
 	cat <<EOF
 
-usage $(basename $0) [<gateway-host> <remote-host> <remote-port>] <local-port>
+usage $(basename $0) [<gateway-host> <remote-host> <remote-port>]
 
 example:
 
@@ -27,14 +36,13 @@ fi
 
 GATEWAY_HOST=
 
-if [ $# -eq 4 ]; then
+if [ $# -eq 3 ]; then
 	GATEWAY_HOST=$1
 	R_HOST=$(getent hosts $2 | head -1 | awk '{ print $1 }' )
 	R_PORT=$3
-	L_PORT=$4
 fi
 
-KILL=$(lsof -i :$L_PORT | grep LISTEN | head -1 | awk '{ print $2 }')
+KILL=$(lsof -i :$R_PORT | grep LISTEN | head -1 | awk '{ print $2 }')
 
 if [ "$KILL" != "" ]; then
 	kill $KILL
@@ -42,6 +50,6 @@ if [ "$KILL" != "" ]; then
 fi
 
 if [ "$GATEWAY_HOST" != "" ]; then
-	ssh -f -L $L_PORT:$R_HOST:$R_PORT -N $GATEWAY_HOST 
-	[ $? -eq 0 ] && echo "SSH Tunnel is stated on locahost:$L_PORT"
+	sshuttle -vv -l $R_PORT -r $GATEWAY_HOST $R_HOST $R_HOST/32
+	[ $? -eq 0 ] && echo "SSH Tunnel is stated on locahost:$R_PORT"
 fi

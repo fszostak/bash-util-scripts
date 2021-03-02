@@ -6,7 +6,7 @@
 #
 # setup: sudo apt install sshuttle
 
-type sshuttle > /dev/null
+type sshuttle > /dev/null 2>&1
 if [ $? -eq 1 ]; then
 	echo "Installing sshuttle..."
 	sudo apt install sshuttle

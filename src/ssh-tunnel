@@ -21,10 +21,10 @@ usage $(basename $0) [<gateway-host> <remote-host> <remote-port>]
 example:
 
 Tunnel up
-$(basename $0) my-gateway mydb.remote.host 3306 33306
+$(basename $0) my-gateway mydb.remote.host 3306
 
 Tunnel down
-$(basename $0) 33306
+$(basename $0) 3306
 
 EOF
 	exit

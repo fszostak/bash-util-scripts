@@ -1,2 +1,0 @@
-
-kubectl top nodes -n $1

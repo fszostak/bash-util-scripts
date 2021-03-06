@@ -1,0 +1,8 @@
+#!/usr/bin/env bash
+
+if [ $# -eq 0 ]; then
+	echo "usage: $(basename $0) <replicas>"
+	exit
+fi
+
+kubectl scale deployments/cluster-autoscaler --replicas=$1 -n kube-system

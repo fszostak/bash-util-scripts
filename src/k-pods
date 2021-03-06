@@ -1,0 +1,19 @@
+#!/usr/bin/env bash
+
+if [ $# -eq 0 ]; then
+	echo "usage: $(basename $0) <namespace1> [<namespace2> ...]"
+	exit
+fi
+
+for NAMESPACE in  $(echo $@)
+do
+	echo "NAMESPACE: $NAMESPACE"
+
+	kubectl get pods -n $NAMESPACE
+	while [ $(kubectl get pods -n $NAMESPACE | grep "0/1" | wc -l) -gt 0 ]
+	do
+		sleep 3
+		kubectl get pods -n unimed-portal-$branch
+	done
+done
+

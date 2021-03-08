@@ -1,0 +1,23 @@
+#!/usr/bin/env bash
+
+if [ $# -eq 0 ]; then
+	echo "usage: $(basename $0) <profile> <beanstalk-environment-name> <desired> <min> <max>"
+	exit 0
+fi
+
+export AWS_PAGER=""
+
+PROFILE=$1
+NAME=$2
+DESIRED=$3
+MIN=$4
+MAX=$5
+if [ "$MIN" = "" ]; then
+	MIN=$DESIRED
+	MAX=$DESIRED
+fi
+
+#aws autoscaling set-desired-capacity --auto-scaling-group-name $ASG --desired-capacity $DESIRED --profile $PROFILE
+
+ASG=$(aws autoscaling describe-tags  --profile leila-guru --output text | grep elasticbeanstalk:environment-name | grep $NAME | awk '{ print $4 }')
+[ $? -eq 0 ] && aws autoscaling update-auto-scaling-group --auto-scaling-group-name $ASG --min-size $MIN --max-size $MAX --profile $PROFILE

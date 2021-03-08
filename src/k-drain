@@ -1,0 +1,3 @@
+NODE=$1
+kubectl drain --delete-local-data --ignore-daemonsets $NODE
+kubectl uncordon $NODE

@@ -9,6 +9,8 @@ for NAMESPACE in  $(echo $@)
 do
 	echo "NAMESPACE: $NAMESPACE"
 
+	k-delete-evicted $NAMESPACE 2>/dev/null
+
 	kubectl get pods -n $NAMESPACE
 	while [ $(kubectl get pods -n $NAMESPACE | grep "0/1" | wc -l) -gt 0 ]
 	do

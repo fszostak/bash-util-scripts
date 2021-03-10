@@ -2,6 +2,5 @@
 
 for NODE in $(kubectl get nodes | awk '{ print $1 }' | grep -v NAME)
 do
-	kubectl drain --delete-local-data --ignore-daemonsets $NODE
-	kubectl uncordon $NODE
+	kubectl drain --delete-local-data --ignore-daemonsets $NODE && kubectl uncordon $NODE
 done

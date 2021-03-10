@@ -5,7 +5,7 @@
 TMP=/tmp/$(basename $0).tmp
 
 if [ "$1" == "-h" -o $# -lt 1 ]; then
-  echo "usage: kubectl-logs <namespace> [<filter>]"
+  echo "usage: k-logs <namespace> [<filter>]"
   exit
 fi
 

@@ -1,1 +1,7 @@
-kubectl get nodes
+#!/usr/bin/env bash
+
+if [ "$1" = "describe" ]; then
+	kubectl describe node $(kubectl get nodes | awk '{ print $1 }' | grep -v 'NAME') | less
+else
+	kubectl get nodes
+fi

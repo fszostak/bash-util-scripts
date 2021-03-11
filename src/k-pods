@@ -1,21 +1,20 @@
 #!/usr/bin/env bash
 
-if [ $# -eq 0 ]; then
-	echo "usage: $(basename $0) <namespace1> [<namespace2> ...]"
-	exit
-fi
+# Fabio Szostak
+# Thu 11 Mar 2021 06:37:34 AM -03
 
-for NAMESPACE in  $(echo $@)
+for NAMESPACE in  $(kubectl get namespaces | egrep 'develop|staging|production' | awk '{print $1}')
 do
+	echo
 	echo "NAMESPACE: $NAMESPACE"
-
-	k-delete-evicted $NAMESPACE 2>/dev/null
 
 	kubectl get pods -n $NAMESPACE
 	while [ $(kubectl get pods -n $NAMESPACE | grep "0/1" | wc -l) -gt 0 ]
 	do
+		echo "Waiting all pods running on $NAMESPACE ..."
 		sleep 3
 		kubectl get pods -n unimed-portal-$branch
 	done
+	echo
 done
 

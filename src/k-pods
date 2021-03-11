@@ -3,17 +3,30 @@
 # Fabio Szostak
 # Thu 11 Mar 2021 06:37:34 AM -03
 
-for NAMESPACE in  $(kubectl get namespaces | egrep 'develop|staging|production' | awk '{print $1}')
+if [ "$1" = "" ]; then
+	FILTER_NS='develop|staging|production'
+else
+	FILTER_NS="$1"
+fi
+
+if [ "$2" = "" ]; then
+	FILTER_P="-"
+else
+	FILTER_P="$2"
+fi
+
+for NAMESPACE in  $(kubectl get namespaces | egrep $FILTER_NS | awk '{print $1}')
 do
 	echo
 	echo "NAMESPACE: $NAMESPACE"
 
-	kubectl get pods -n $NAMESPACE
+	kubectl get pods -n $NAMESPACE | egrep "$FILTER_P"
 	while [ $(kubectl get pods -n $NAMESPACE | grep "0/1" | wc -l) -gt 0 ]
 	do
 		echo "Waiting all pods running on $NAMESPACE ..."
-		sleep 3
-		kubectl get pods -n unimed-portal-$branch
+		sleep 1
+		kubectl get pods -n $NAMESPACE | egrep "$FILTER_P"
+		echo
 	done
 	echo
 done

@@ -2,6 +2,9 @@
 #-----------------------------
 # aws-ec2 (2020) fszostak
 # Wed Mar 31 17:01:34 -03 2020
+#
+# Gateway method added
+# Thu 18 Mar 2021 05:11:53 AM -03
 
 . ~/scripts/.app-functions.sh
 
@@ -55,7 +58,7 @@ if [ -f $EC2_CONFIG ]; then
 	# check config file compatibility
 	IFS=';' 
 	set -- $(head -1 $EC2_CONFIG)
-	if [ $# -ne 8 ]; then
+	if [ $# -ne 7 ]; then
 		> $EC2_CONFIG
 	fi
 	IFS=' '
@@ -69,7 +72,7 @@ if [ "$FILTER" != "" ]; then
     COUNT=$(grep "$EC2_FILTER" $EC2_CONFIG | head -1 | cut -f3 -d";")
     IP=$(grep "$EC2_FILTER" $EC2_CONFIG | cut -f2 -d";")
     NAME=$(grep "$EC2_FILTER" $EC2_CONFIG | cut -f6 -d";")
-    GATEWAY=$(grep "$EC2_FILTER" $EC2_CONFIG | cut -f8 -d";")
+    GATEWAY=$(grep "$EC2_FILTER" $EC2_CONFIG | cut -f7 -d";")
     YN=""
     [ "$COUNT" == "" ] && COUNT=0
     if [ $COUNT -gt 1 ]; then
@@ -114,18 +117,19 @@ if [ $DEFAULT -eq 0 -o "$IP" == "" ]; then
   if [ $COUNT -gt 1 ]; then
     # order by name and first beanstalk instances
     sort -k2 -t "	" $TMP > $TMP.2
-    grep -v -e "env$" $TMP.2 > $TMP.1
-    grep -e "env$" $TMP.2 > $TMP
+    grep -v -e "env$" $TMP.2 >> $TMP.1
+		echo " Exit " > $TMP
+    grep -e "env$" $TMP.2 >> $TMP
     cat $TMP.1 >> $TMP
     rm $TMP.1 $TMP.2
 
     # format menu output
     clear
-    msg_bold "   aws-ec2 (2020) by fszostak"
+    msg_bold "   aws-ec2 (2021) by fszostak"
     echo
     echo
-    echo "   #   ip-address       environment-name                           "
-    echo -ne "   --- ---------------- -----------------------------------"
+    echo     "   #   environment-name                          ip-address"
+    echo -ne "   --- ----------------------------------- ----------------"
 
     IFS=$'\n' 
     options=( 
@@ -136,7 +140,7 @@ if [ $DEFAULT -eq 0 -o "$IP" == "" ]; then
         }
         {
           if ($1 != "None") {
-            printf "%02d) %16s %-35s\n", count, $1, $2;
+            printf "%02d) %-35s %16s\n", count, $2, $1;
             count++
           }
         }'
@@ -149,12 +153,17 @@ if [ $DEFAULT -eq 0 -o "$IP" == "" ]; then
     choice=$?
     let choice=$choice+1
 
+		if [ $choice -eq 1 ]; then
+			clear
+			rm $TMP
+			exit
+		fi
     option="$(head -$choice $TMP | tail -1)"
   else
     option="$(cat $TMP)"
   fi
-  NAME=$(echo "$option" | cut -f2 -d"	")
-  IP=$(echo "$option" | cut -f1 -d"	")
+	NAME=$(echo $option | awk '{print $2}')
+	IP=$(echo $option | awk '{print $1}')
 fi
 
 if [ $DEFAULT -eq 1 -a "$USERNAME" == "" ]; then
@@ -203,11 +212,13 @@ echo -ne "Connecting to ${COLOR_WHITE}$NAME${COLOR_NC} ($USERNAME@$IP)...."
 echo
 if [ "$GATEWAY" = "" -o "$GATEWAY" = "direct" ]; then
 	ssh -o StrictHostKeyChecking=no -i $AWS_PEM_FILE $USERNAME@$IP 2> $TMP
+	ret=$?
 else
 	ssh -o ProxyCommand="ssh -W %h:%p $GATEWAY" -o StrictHostKeyChecking=no -i $AWS_PEM_FILE $USERNAME@$IP 2> $TMP
+	ret=$?
 fi
 
-if [ $? -eq 0 ]; then
+if [ $ret -eq 0 ]; then
 	# update EC2_CONFIG
 	grep -v -e ";$FILTER;!$NAME!;" $EC2_CONFIG > $EC2_CONFIG-$$.tmp
 	echo "$USERNAME;$IP;$COUNT;$AWS_PROFILE;$FILTER;!$NAME!;$GATEWAY" >> $EC2_CONFIG-$$.tmp
@@ -218,7 +229,13 @@ if [ $(grep ' has changed and you have requested strict checking' $TMP | wc -l) 
   grep -v "$1" ~/.ssh/known_hosts > /tmp/known_hosts
   cp /tmp/known_hosts ~/.ssh/known_hosts
   rm /tmp/known_hosts
-  ssh --oStrictHostKeyChecking=no -i $AWS_PEM_FILE $USERNAME@$IP #2> /dev/null
+	if [ "$GATEWAY" = "" -o "$GATEWAY" = "direct" ]; then
+		ssh -o StrictHostKeyChecking=no -i $AWS_PEM_FILE $USERNAME@$IP 2> $TMP
+		ret=$?
+	else
+		ssh -o ProxyCommand="ssh -W %h:%p $GATEWAY" -o StrictHostKeyChecking=no -i $AWS_PEM_FILE $USERNAME@$IP 2> $TMP
+		ret=$?
+	fi
 fi
 
 rm $TMP

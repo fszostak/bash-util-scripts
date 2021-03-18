@@ -5,15 +5,28 @@
 
 . ~/scripts/.app-functions.sh
 
-if [ $# -eq 0 -o $# -gt 2 ]; then
-  echo "usage: aws-ec2 <aws-profile> [<filter>]"
-  echo "       options:"
-  echo "       <aws-profile>   do you need have a account instances access pem and"
-  echo "                       do you need have a account access pem and"
-  echo "                       and configure profile with \"aws configure --profile=name\""
-  echo "       example: for profile name \"customer\" you need have ~/.ssh/customer-devops.pem file"
-  echo "                try the command \"ec2 costumer\""
+function ctrl_c() {
+  echo "Aborted!!!"
+  [ -f $TMP ] && rm $TMP
   exit
+}
+
+if [ $# -eq 0 -o $# -gt 3 ]; then
+  echo "usage: aws-ec2 [-r] <aws-profile> [<filter>]"
+  echo "       options:"
+  echo "       [-r]            dont read config file defaults"
+  echo "       <aws-profile>   AWS Profile"
+  echo "                       Configure profile with \"aws configure --profile=name\""
+  echo "       example: for profile name \"customer\" you need have ~/.ssh/customer-devops.pem file"
+  echo "                try the command \"aws-ec2 costumer\""
+  exit
+fi
+
+if [ "$1" = "-r" ]; then
+	DEFAULT=0
+	shift
+else
+	DEFAULT=1
 fi
 
 echo
@@ -24,20 +37,31 @@ AWS_PEM_FILE=~/.ssh/$1-devops.pem
 if [ ! -f $AWS_PEM_FILE ]; then
 	AWS_PEM_FILE=~/.ssh/$1-prod.pem
 	if [ ! -f $AWS_PEM_FILE ]; then
-		echo "\"$AWS_PEM_FILE\" not found"
+		echo "\"~/.ssh/$1-devops.pem\" not found"
 		exit
 	fi
 fi
 
-TMP=/tmp/ec2.tmp
+trap ctrl_c INT
+TMP=/tmp/ec2-$$.tmp
 EC2_CONFIG=~/.ssh/.ec2_config
-[ ! -f $EC2_CONFIG ] && touch $EC2_CONFIG
-
 FILTER=$2
 NAME=""
 USERNAME=""
-
+GATEWAY=""
 EC2_FILTER=";$AWS_PROFILE;$FILTER;"
+
+if [ -f $EC2_CONFIG ]; then
+	# check config file compatibility
+	IFS=';' 
+	set -- $(head -1 $EC2_CONFIG)
+	if [ $# -ne 8 ]; then
+		> $EC2_CONFIG
+	fi
+	IFS=' '
+else
+ 	touch $EC2_CONFIG
+fi
 
 if [ "$FILTER" != "" ]; then
   
@@ -45,6 +69,7 @@ if [ "$FILTER" != "" ]; then
     COUNT=$(grep "$EC2_FILTER" $EC2_CONFIG | head -1 | cut -f3 -d";")
     IP=$(grep "$EC2_FILTER" $EC2_CONFIG | cut -f2 -d";")
     NAME=$(grep "$EC2_FILTER" $EC2_CONFIG | cut -f6 -d";")
+    GATEWAY=$(grep "$EC2_FILTER" $EC2_CONFIG | cut -f8 -d";")
     YN=""
     [ "$COUNT" == "" ] && COUNT=0
     if [ $COUNT -gt 1 ]; then
@@ -67,7 +92,7 @@ else
   FILTER="-"
 fi
 
-if [ "$IP" == "" ]; then
+if [ $DEFAULT -eq 0 -o "$IP" == "" ]; then
 
   echo -ne "   One moment!!! Loading available EC2 instances..."
 
@@ -132,9 +157,9 @@ if [ "$IP" == "" ]; then
   IP=$(echo "$option" | cut -f1 -d"	")
 fi
 
-if [ "$USERNAME" == "" ]; then
+if [ $DEFAULT -eq 1 -a "$USERNAME" == "" ]; then
   if [ -f $EC2_CONFIG ]; then
-    EC2_INFO=$(grep -e ";$FILTER;$NAME\$" $EC2_CONFIG)
+    EC2_INFO=$(grep -e ";$FILTER;!$NAME!;" $EC2_CONFIG)
     if [ $? -eq 0 ]; then
       USERNAME=$(echo $EC2_INFO | cut -f1 -d";")
     fi
@@ -143,7 +168,7 @@ fi
 
 # username
 IFS=' ' 
-if [ "$USERNAME" == "" ]; then
+if [ $DEFAULT -eq 1 -a "$USERNAME" == "" ]; then
   echo "  Select user"
   echo
   options=("ec2-user" "ubuntu")
@@ -152,17 +177,42 @@ if [ "$USERNAME" == "" ]; then
   USERNAME=${options[$choice]}
 fi
 
-# update EC2_CONFIG
-grep -v -e ";$FILTER;$NAME\$" $EC2_CONFIG > $EC2_CONFIG.tmp
-echo "$USERNAME;$IP;$COUNT;$AWS_PROFILE;$FILTER;$NAME" >> $EC2_CONFIG.tmp
-mv $EC2_CONFIG.tmp $EC2_CONFIG
+if [ $DEFAULT -eq 1 -a "$GATEWAY" == "" ]; then
+  if [ -f $EC2_CONFIG ]; then
+    EC2_INFO=$(grep -e ";$FILTER;!$NAME!;" $EC2_CONFIG)
+    if [ $? -eq 0 ]; then
+      GATEWAY=$(echo $EC2_INFO | cut -f7 -d";")
+    fi
+  fi
+fi
 
+# gateway
+IFS=' ' 
+if [ $DEFAULT -eq 1 -a "$GATEWAY" == "" ]; then
+  echo "  Select access method"
+  echo
+  options=("direct" "$AWS_PROFILE-gateway")
+  select_option "${options[@]}"
+  choice=$?
+  GATEWAY=${options[$choice]}
+fi
 
 # connecting
 echo ""
 echo -ne "Connecting to ${COLOR_WHITE}$NAME${COLOR_NC} ($USERNAME@$IP)...."
 echo
-ssh -oStrictHostKeyChecking=no -i $AWS_PEM_FILE $USERNAME@$IP #2> $TMP
+if [ "$GATEWAY" = "" -o "$GATEWAY" = "direct" ]; then
+	ssh -o StrictHostKeyChecking=no -i $AWS_PEM_FILE $USERNAME@$IP 2> $TMP
+else
+	ssh -o ProxyCommand="ssh -W %h:%p $GATEWAY" -o StrictHostKeyChecking=no -i $AWS_PEM_FILE $USERNAME@$IP 2> $TMP
+fi
+
+if [ $? -eq 0 ]; then
+	# update EC2_CONFIG
+	grep -v -e ";$FILTER;!$NAME!;" $EC2_CONFIG > $EC2_CONFIG-$$.tmp
+	echo "$USERNAME;$IP;$COUNT;$AWS_PROFILE;$FILTER;!$NAME!;$GATEWAY" >> $EC2_CONFIG-$$.tmp
+	mv $EC2_CONFIG-$$.tmp $EC2_CONFIG
+fi
 
 if [ $(grep ' has changed and you have requested strict checking' $TMP | wc -l) -gt 0 ]; then
   grep -v "$1" ~/.ssh/known_hosts > /tmp/known_hosts
@@ -172,4 +222,3 @@ if [ $(grep ' has changed and you have requested strict checking' $TMP | wc -l) 
 fi
 
 rm $TMP
-

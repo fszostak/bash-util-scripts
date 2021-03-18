@@ -200,10 +200,14 @@ IFS=' '
 if [ $DEFAULT -eq 1 -a "$GATEWAY" == "" ]; then
   echo "  Select access method"
   echo
-  options=("direct" "$AWS_PROFILE-gateway")
+  options=("direct" "$AWS_PROFILE-gateway" "other")
   select_option "${options[@]}"
   choice=$?
   GATEWAY=${options[$choice]}
+	if [ "$GATEWAY" = "other" ]; then
+		echo -n "  Gateway host: "
+		read GATEWAY
+	fi
 fi
 
 # connecting

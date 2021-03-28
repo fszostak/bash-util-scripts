@@ -19,15 +19,14 @@ fi
 while true
 do
   if [ $# -eq 1 -a "$1" != "all" ]; then
-    docker ps | grep -e "$1\|CONTAINER" | cut -c1-50 > $TMP
+    docker ps | grep "$1" | cut -c1-50 > $TMP
   else
     docker ps | cut -c1-50 | grep -v "CONTAINER" > $TMP
   fi
 
-
   NUM_LINES=$(cat $TMP | wc -l)
 
-  if [ $NUM_LINES -eq 1 ]; then
+  if [ $NUM_LINES -eq 0 ]; then
     echo "No containers running"
     exit
   fi

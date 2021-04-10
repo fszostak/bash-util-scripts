@@ -28,7 +28,6 @@ do
 
   if [ $NUM_LINES -eq 0 ]; then
     echo "No containers running"
-    exit
   fi
 
   if [ "$1" == "all" ]; then
@@ -48,13 +47,16 @@ EOF
     echo "  and press key enter or return to confirm:"
 
     IFS=$'\n' 
-    options=("--- continue ---" $(cat $TMP))
+    options=("--- continue ---"  "----- quit -----" $(cat $TMP))
     echo
 
     select_option "${options[@]}"
     let choice=$?
 
     if [ $choice -eq 0 ]; then
+      continue
+    fi
+    if [ $choice -eq 1 ]; then
       echo
       break
     fi
@@ -70,3 +72,4 @@ EOF
 rm $TMP
 done
 
+clear

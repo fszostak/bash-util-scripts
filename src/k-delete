@@ -5,7 +5,7 @@
 TMP=/tmp/$(basename $0)$$.tmp
 
 if [ "$1" == "-h" -o $# -lt 1 ]; then
-  echo "usage: k-exec <namespace> [<filter>]"
+  echo "usage: k-delete <namespace> [<filter>]"
   exit
 fi
 
@@ -30,7 +30,7 @@ if [ $NUM_LINES -eq 2 ]; then
   POD=$(tail -1 $TMP | cut -f1 -d' ')
 else
   clear
-  msg_bold "  k-exec (2021) by fszostak"
+  msg_bold "  k-delete (2021) by fszostak"
   echo
   echo "  Select one pod using up/down"
   echo "  keys and enter or return to confirm:"
@@ -45,11 +45,6 @@ else
   POD=$(echo ${options[$choice]} | cut -f1 -d' ')
 fi
 
-echo "Running pod bash..."
-kubectl exec -it $POD -n $NAMESPACE -- bash
-if [ $? -eq 126 ]; then
-  echo "Running container sh..."
-  kubectl exec -it $POD -n $NAMESPACE -- sh
-fi
+[ "$POD" != "" ] && kubectl delete $POD -n $NAMESPACE 
 
 rm $TMP

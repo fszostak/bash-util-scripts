@@ -13,9 +13,9 @@ NAMESPACE=$1
 FILTER=$2
 
 if [ "$FILTER" != "" ]; then
-  kubectl get pods -n $NAMESPACE | grep -e "$FILTER\|NAME" | cut -c1-49 > $TMP
+  kubectl get pods -n $NAMESPACE | grep -e "$FILTER\|NAME" | cut -c1-70 > $TMP
 else
-  kubectl get pods -n $NAMESPACE | cut -c1-49 | grep -v "^NAME" > $TMP
+  kubectl get pods -n $NAMESPACE | cut -c1-70 | grep -v "^NAME" > $TMP
 fi
 
 NUM_LINES=$(cat $TMP | wc -l)

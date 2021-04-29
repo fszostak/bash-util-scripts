@@ -16,7 +16,11 @@ $ ln -s ~/Workspaces/bash-util-scripts/src ~/scripts
 2) Add scripts directory to your $PATH
 
 ```
-$ echo 'export PATH=$PATH:~/scripts' >> ~/.bash_profile
+# for zsh
+$ echo -n "\n\nexport PATH=$PATH:~/scripts" >> ~/.zshrc
+
+# for bash
+$ echo -n "\n\nexport PATH=$PATH:~/scripts" >> ~/.bash_profile
 ```
 
 3) Reopen your terminal and try use any script

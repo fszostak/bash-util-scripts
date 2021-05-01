@@ -125,9 +125,9 @@ do
 
     if [ "$SIZE" != "" ]; then
        APP_PARM="data:text/html,<html><body><script>window.moveTo($POSITION);window.resizeTo($SIZE);window.location='$URL';</script></body></html>" 
-       $CHROME --app="$APP_PARM" > /dev/null 2>&1 &
+       $CHROME –ignore-certificate-errors --app="$APP_PARM" > /dev/null 2>&1 &
     else
-       $CHROME --app="$URL" > /dev/null 2>&1 &
+       $CHROME –ignore-certificate-errors --app="$URL" > /dev/null 2>&1 &
     fi
   fi
 

@@ -25,7 +25,19 @@ docker rmi $(docker images --filter "dangling=true" -q --no-trunc) > /dev/null 2
 if [ "$1" == 'volumes' -a $(docker volume ls | grep local | wc -l) -gt 0 ]; then 
   docker-compose down
   docker volume rm $(docker volume ls | grep local | awk '{ print $2;}')
+
 fi
+
+IMAGE_IGNORE=( 'python' 'mysql' 'redis' 'drupal' 'bitnami/solr' 'varnish' 'pwbus/worker' 'pwbus/http' 'node' )
+for IMAGE in $(docker images | awk '{ print $1 }')
+do
+	echo $IMAGE
+	if [[ " ${IMAGE_IGNORE[@]} " =~ " ${IMAGE} " ]]; then
+		continue
+	fi
+	docker rmi $(docker images | awk '{ print $1 }' | grep $IMAGE)
+done
+
 if [ "$1" == 'all' ]; then 
   # Remove all stopped containers
   echo y | docker container prune  > /dev/null 2>&1

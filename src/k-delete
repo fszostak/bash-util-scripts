@@ -45,6 +45,6 @@ else
   POD=$(echo ${options[$choice]} | cut -f1 -d' ')
 fi
 
-[ "$POD" != "" ] && kubectl delete pod $POD -n $NAMESPACE 
+[ "$POD" != "" ] && kubectl delete pod $POD -n $NAMESPACE --grace-period 0 --force
 
 rm $TMP

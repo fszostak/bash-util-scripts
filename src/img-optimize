@@ -37,6 +37,11 @@ if [ $? -ne 0 ]; then
 fi
 
 IMAGES="$1"
+NEWER=./.img-optimize.$IMAGES
+if [ ! -f $NEWER ]; then
+	touch -t 200001010000 $NEWER
+fi
+
 if [ "$1" == "-h" -o ! -d "$IMAGES" ]; then
 	echo "usage: img-optimize <dir>"
 	echo "       optimize jpg and png images from directory,"
@@ -70,7 +75,7 @@ while read FILE; do
 
 	echo
 done <<EOF
-$(find "$IMAGES" -name "*.jp*g" -type f 2> /dev/null)
+$(find "$IMAGES" -newer $NEWER -name "*.jp*g" -type f 2> /dev/null)
 EOF
 
 
@@ -102,5 +107,7 @@ while read FILE; do
 
 	echo
 done <<EOF
-$(find "$IMAGES" -name "*.png" -type f 2> /dev/null)
+$(find "$IMAGES" -newer $NEWER -name "*.png" -type f 2> /dev/null)
 EOF
+
+touch $NEWER

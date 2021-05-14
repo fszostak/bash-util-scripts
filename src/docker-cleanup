@@ -28,7 +28,7 @@ if [ "$1" == 'volumes' -a $(docker volume ls | grep local | wc -l) -gt 0 ]; then
 
 fi
 
-IMAGE_IGNORE=( 'python' 'mysql' 'redis' 'drupal' 'bitnami/solr' 'varnish' 'pwbus/worker' 'pwbus/http' 'node' )
+IMAGE_IGNORE=( 'python' 'mysql' 'redis' 'drupal' 'bitnami/solr' 'varnish' 'pwbus/worker' 'pwbus/http' 'node' 'bitnami/laravel' )
 for IMAGE in $(docker images | awk '{ print $1 }')
 do
 	echo $IMAGE

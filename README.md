@@ -27,6 +27,14 @@ $ echo -n "\n\nexport PATH=$PATH:~/scripts" >> ~/.bash_profile
 
 > Note: all commands have -h option for help
 
+## RUN WITH DOCKER
+
+```
+docker run fszostak/bash-util-scripts bash
+
+docker run -v "$(pwd)/images:/images" fszostak/bash-util-scripts bash -c "~/scripts/img-optimize /images"
+```
+
 
 ## SSH
 - [ssh-plus - ssh connection menu from your ~/.ssh/config TODO](https://github.com/fszostak/bash-util-scripts/blob/master/docs/ssh.md).

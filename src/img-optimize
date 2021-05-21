@@ -63,9 +63,9 @@ TMP=/tmp/img-optimize-$$.tmp
 # --- optimizing JPEG image files
 
 if [ $MMIN -eq 0 ]; then
-	$(find "$IMAGES" -newer $NEWER -name "*.jp*g" -type f 2> /dev/null > $TMP
+	find "$IMAGES" -newer $NEWER -name "*.jp*g" -type f 2> /dev/null > $TMP
 else
-	$(find "$IMAGES" -mmin $MMIN -name "*.jp*g" -type f 2> /dev/null > $TMP
+	find "$IMAGES" -mmin $MMIN -name "*.jp*g" -type f 2> /dev/null > $TMP
 fi
 
 while read FILE; do
@@ -94,9 +94,9 @@ done < $TMP
 # --- optimizing PNG image files
 
 if [ $MMIN -eq 0 ]; then
-	$(find "$IMAGES" -newer $NEWER -name "*.png" -type f 2> /dev/null)
+	find "$IMAGES" -newer $NEWER -name "*.png" -type f 2> /dev/null > $TMP
 else
-	$(find "$IMAGES" -mmin $MMIN -name "*.png" -type f 2> /dev/null)
+	find "$IMAGES" -mmin $MMIN -name "*.png" -type f 2> /dev/null > $TMP
 fi
 while read FILE; do
 	OPT_FILE="${FILE}.opt"

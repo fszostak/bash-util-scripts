@@ -43,23 +43,37 @@ if [ ! -f $NEWER ]; then
 fi
 
 if [ "$1" == "-h" -o ! -d "$IMAGES" ]; then
-	echo "usage: img-optimize <dir>"
+	echo "usage: img-optimize -m <tine-in-seconds> <dir>"
 	echo "       optimize jpg and png images from directory,"
 	echo "       all images will be overwritted"
 	exit
 fi
 
+if [ "$1" == "-m" ]; then
+	MMIN=$2
+	shift 2
+else
+	MMIN=0
+fi
+
 trap ctrl_c INT
 
+TMP=/tmp/img-optimize-$$.tmp
 
 # --- optimizing JPEG image files
+
+if [ $MMIN -eq 0 ]; then
+	$(find "$IMAGES" -newer $NEWER -name "*.jp*g" -type f 2> /dev/null > $TMP
+else
+	$(find "$IMAGES" -mmin $MMIN -name "*.jp*g" -type f 2> /dev/null > $TMP
+fi
 
 while read FILE; do
 	OPT_FILE="${FILE}.opt"
 
 	[ ! -f "$FILE" ] && continue
 
-	$O_JPG --all-progressive --stdout -m85 "$FILE" > "$OPT_FILE"
+	$O_JPG --all-progressive --stdout -m80 "$FILE" > "$OPT_FILE"
 
 	if [ $? -ne 0 ]; then
 		[ -f "$OPT_FILE" ] && rm "$OPT_FILE"
@@ -74,13 +88,16 @@ while read FILE; do
 	fi
 
 	echo
-done <<EOF
-$(find "$IMAGES" -newer $NEWER -name "*.jp*g" -type f 2> /dev/null)
-EOF
+done < $TMP
 
 
 # --- optimizing PNG image files
 
+if [ $MMIN -eq 0 ]; then
+	$(find "$IMAGES" -newer $NEWER -name "*.png" -type f 2> /dev/null)
+else
+	$(find "$IMAGES" -mmin $MMIN -name "*.png" -type f 2> /dev/null)
+fi
 while read FILE; do
 	OPT_FILE="${FILE}.opt"
 	[ ! -f "$FILE" ] && continue
@@ -88,7 +105,7 @@ while read FILE; do
 	filesize "$FILE"
 	ORIG_FSIZE=$?
 
-	$O_PNG --quality=80-95 - < "$FILE" > "$OPT_FILE"
+	$O_PNG --quality=75-90 - < "$FILE" > "$OPT_FILE"
 
 	if [ $? -ne 0 ]; then
 		[ -f "$OPT_FILE" ] && rm "$OPT_FILE"
@@ -106,8 +123,8 @@ while read FILE; do
 	fi
 
 	echo
-done <<EOF
-$(find "$IMAGES" -newer $NEWER -name "*.png" -type f 2> /dev/null)
-EOF
+done < $TMP
 
-touch $NEWER
+if [ $MMIN -eq 0 ]; then
+	touch $NEWER
+fi

@@ -11,6 +11,8 @@ if [ "$1" == "-h" ]; then
   exit
 fi
 
+set -x
+
 docker stop $(docker ps -aq) > /dev/null 2>&1
 
 # Cleanup exited processes:
@@ -20,7 +22,7 @@ docker rm -v $(docker ps -a -q -f status=exited) > /dev/null 2>&1
 docker volume rm $(docker volume ls -qf dangling=true) > /dev/null 2>&1
 
 # Cleanup dangling images:
-docker rmi $(docker images --filter "dangling=true" -q --no-trunc) > /dev/null 2>&1
+docker rmi $(docker images --filter "dangling=true" -q --no-trunc) -f > /dev/null 2>&1
 
 if [ "$1" == 'volumes' -a $(docker volume ls | grep local | wc -l) -gt 0 ]; then 
   docker-compose down
@@ -35,7 +37,7 @@ do
 	if [[ " ${IMAGE_IGNORE[@]} " =~ " ${IMAGE} " ]]; then
 		continue
 	fi
-	docker rmi $(docker images | awk '{ print $1 }' | grep $IMAGE)
+	docker rmi $(docker images | awk '{ print $1 }' | grep $IMAGE) -f
 done
 
 if [ "$1" == 'all' ]; then 

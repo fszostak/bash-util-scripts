@@ -36,26 +36,27 @@ if [ $? -ne 0 ]; then
   
 fi
 
-IMAGES="$1"
-NEWER=./.img-optimize.$IMAGES
-if [ ! -f $NEWER ]; then
-	touch -t 200001010000 $NEWER
-fi
-
-if [ "$1" == "-h" -o ! -d "$IMAGES" ]; then
+if [ "$1" = "-h" -o $# -eq 0 ]; then
 	echo "usage: img-optimize -m <tine-in-seconds> <dir>"
 	echo "       optimize jpg and png images from directory,"
 	echo "       all images will be overwritted"
 	exit
 fi
 
-if [ "$1" == "-m" ]; then
+if [ "$1" = "-m" ]; then
 	MMIN=$2
-	shift 2
+	IMAGES="$3"
 else
 	MMIN=0
+	IMAGES="$1"
+
+	NEWER=./.img-optimize.$IMAGES
+	if [ ! -f $NEWER ]; then
+		touch -t 200001010000 $NEWER
+	fi
 fi
 
+echo "Scanning \"$IMAGES\" ..."
 trap ctrl_c INT
 
 TMP=/tmp/img-optimize-$$.tmp
@@ -67,6 +68,8 @@ if [ $MMIN -eq 0 ]; then
 else
 	find "$IMAGES" -mmin $MMIN -name "*.jp*g" -type f 2> /dev/null > $TMP
 fi
+
+echo "Optimizing $(cat $TMP | wc -l) JPEG files..."
 
 while read FILE; do
 	OPT_FILE="${FILE}.opt"
@@ -98,6 +101,9 @@ if [ $MMIN -eq 0 ]; then
 else
 	find "$IMAGES" -mmin $MMIN -name "*.png" -type f 2> /dev/null > $TMP
 fi
+
+echo "Optimizing $(cat $TMP | wc -l) PNG files..."
+
 while read FILE; do
 	OPT_FILE="${FILE}.opt"
 	[ ! -f "$FILE" ] && continue

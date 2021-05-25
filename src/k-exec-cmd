@@ -1,0 +1,75 @@
+#!/usr/bin/env bash
+
+. ~/scripts/.app-functions.sh
+
+if [ "$1" = "--everyone" ]; then
+	EVERYONE=1
+	shift
+else
+	EVERYONE=0
+fi
+
+TMP=/tmp/$(basename $0)$$.tmp
+
+if [ "$1" == "-h" -o $# -lt 2 ]; then
+  echo "usage: $(basename $0) [--everyone] <namespace> [<filter>] <command>"
+  exit
+fi
+
+if [ $# -eq 3 ]; then
+	NAMESPACE=$1
+	FILTER=$2
+	CMD=$3
+else
+	NAMESPACE=$1
+	FILTER=""
+	CMD=$2
+fi
+
+if [ "$FILTER" != "" ]; then
+  kubectl get pods -n $NAMESPACE | grep "$FILTER" | cut -c1-70 > $TMP
+else
+  kubectl get pods -n $NAMESPACE | grep -v "NAME" | cut -c1-70 > $TMP
+fi
+
+NUM_LINES=$(cat $TMP | wc -l)
+
+if [ $NUM_LINES -eq 0 ]; then
+  echo "No pods running"
+  exit
+fi
+
+if [ $NUM_LINES -eq 1 -o $EVERYONE -eq 1 ]; then
+  echo "   NAME                                READY   STATUS    RESTARTS   AGE"
+
+  tail -1 $TMP
+  POD=$(tail -1 $TMP | cut -f1 -d' ')
+else
+  clear
+	msg_bold "  $(basename $0) (2021) by fszostak"
+  echo
+  echo "  Select one pod using up/down"
+  echo "  keys and enter or return to confirm:"
+	echo
+  echo "   NAME                                READY   STATUS    RESTARTS   AGE"
+
+  IFS=$'\n' 
+  options=("--- continue ---" $(cat $TMP))
+  echo
+
+  select_option "${options[@]}"
+  let choice=$?
+
+	[ $choice -eq 0 ] && exit
+
+  POD=$(echo ${options[$choice]} | cut -f1 -d' ')
+fi
+
+echo "Running command ..."
+kubectl exec  $POD -n $NAMESPACE -- bash -c "$CMD"
+if [ $? -eq 126 ]; then
+  echo "Running command with sh..."
+  kubectl exec -it $POD -n $NAMESPACE -- sh -c "$CMD"
+fi
+
+rm $TMP

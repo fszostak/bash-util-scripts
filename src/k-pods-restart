@@ -1,0 +1,29 @@
+#!/usr/bin/env bash
+
+. ~/scripts/.app-functions.sh
+
+TMP=/tmp/$(basename $0)$$.tmp
+
+if [ "$1" == "-h" -o $# -lt 1 ]; then
+  echo "usage: k-pods-restar <namespace> [<filter>]"
+  exit
+fi
+
+NAMESPACE=$1
+FILTER=$2
+
+if [ "$FILTER" != "" ]; then
+		kubectl get pods -n $NAMESPACE | grep -e "$FILTER\|NAME" | cut -c1-70 > $TMP
+else
+  kubectl get pods -n $NAMESPACE | cut -c1-70 | grep -v "^NAME" > $TMP
+fi
+
+while read LINE
+do
+  POD=$(echo $LINE | cut -f1 -d' ')
+	[ "$POD" != "" ] && kubectl delete pod $POD -n $NAMESPACE --grace-period 0 --force
+done < $TMP
+
+rm $TMP
+
+k-pods $NAMESPACE

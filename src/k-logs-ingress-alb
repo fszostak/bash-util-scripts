@@ -1,0 +1,6 @@
+#!/usr/bin/env bash
+
+# Fabio Szostak
+# Thu 15 Jul 2021 05:12:13 PM -03
+
+kubectl logs -f -n kube-system $(kubectl get pods -n kube-system | grep aws-load-balancer-controller | awk '{ print $1 }')

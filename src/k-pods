@@ -20,12 +20,13 @@ do
 	echo
 	echo "NAMESPACE: $NAMESPACE"
 
-	kubectl get pods -n $NAMESPACE | egrep "$FILTER_P"
+	kubectl get pods -o wide
+	kubectl get pods -n $NAMESPACE -o wide  | egrep "$FILTER_P"
 	while [ $(kubectl get pods -n $NAMESPACE | grep "0/1" | wc -l) -gt 0 ]
 	do
 		echo "Waiting all pods running on $NAMESPACE ..."
 		sleep 1
-		kubectl get pods -n $NAMESPACE | egrep "$FILTER_P"
+		kubectl get pods -n $NAMESPACE -o wide | egrep "$FILTER_P"
 		echo
 	done
 	echo

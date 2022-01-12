@@ -1,0 +1,7 @@
+#!/usr/bin/env bash
+
+for FILE in $(ls -1 *.svg)
+do
+        svgo - < $FILE > $FILE.opt
+        [ $? -eq 0 ] && mv $FILE.opt $FILE
+done

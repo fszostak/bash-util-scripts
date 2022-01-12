@@ -23,6 +23,20 @@ fi
 
 #aws autoscaling set-desired-capacity --auto-scaling-group-name $ASG --desired-capacity $DESIRED --profile $PROFILE
 
+echo
+echo "Environment status"
+aws elasticbeanstalk describe-environment-health --environment-name $NAME --attribute-names All  --profile $PROFILE --region us-east-1
+
+echo
+echo -n "Continue [Y/n]? " 
+read OPTION
+if [ "$OPTION" = "n" -o "$OPTION" = "N" ]; then
+	exit
+fi
+
+echo
+echo "Updating..."
+
 ASG=$(aws autoscaling describe-tags  --profile $PROFILE --output text | grep "elasticbeanstalk:environment-name" | grep $NAME | awk '{ print $4 }')
 aws autoscaling describe-tags  --profile $PROFILE --output text  | grep elasticbeanstalk:environment-name | grep $NAME
 if [ "$ASG" != "" ]; then
@@ -31,3 +45,6 @@ if [ "$ASG" != "" ]; then
 else
 	echo "ASG not found"
 fi
+echo
+
+echo

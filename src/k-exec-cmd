@@ -54,7 +54,7 @@ else
   echo "   NAME                                READY   STATUS    RESTARTS   AGE"
 
   IFS=$'\n' 
-  options=("--- continue ---" $(cat $TMP))
+  options=("-----  exit -----" $(cat $TMP))
   echo
 
   select_option "${options[@]}"

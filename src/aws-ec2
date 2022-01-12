@@ -105,6 +105,7 @@ if [ $DEFAULT -eq 0 -o "$IP" == "" ]; then
       --query 'Reservations[*].Instances[*].{Name:Tags[?Key==`Name`]|[0].Value,Instance:PublicIpAddress}' \
       --output='text' | grep -v -e "^None" > $TMP
 
+	[ $? -ne 0 ] && ctrl_c
 
   echo -ne "\r                                                   \r"
   # filter by second parameter

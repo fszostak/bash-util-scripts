@@ -12,11 +12,8 @@ fi
 
 NAMESPACE=$1
 
-echo
 echo "$(date +'%F %T')"
-echo "Sum all pods of $NAMESPACE"
+echo "Usage of pods from $NAMESPACE"
 SUM=0; for N in $(kubectl top pods -n $NAMESPACE| awk '{print $2 }' | sed 's/m//' | grep -v CPU); do let SUM=$SUM+$N; done; echo "cpu ${SUM}m"
-SUM=0; for N in $(kubectl top pods -n $NAMESPACE| awk '{print $3 }' | sed 's/Mi//' | grep -v MEMORY); do let SUM=$SUM+$N; done; echo "memory ${SUM}Mi"
+SUM=0; for N in $(kubectl top pods -n $NAMESPACE| awk '{print $3 }' | sed 's/Mi//' | grep -v MEMORY); do let SUM=$SUM+$N; done; echo -n "memory ${SUM}Mi"
 echo
-
-kubectl get nodes --no-headers | awk '{print $1}' | xargs -I {} sh -c 'echo {}; kubectl describe node {} | grep Allocated -A 5 | grep -ve Event -ve Allocated -ve percent -ve -- ; echo'

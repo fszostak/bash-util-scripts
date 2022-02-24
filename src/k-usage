@@ -1,16 +1,17 @@
 #!/usr/bin/env bash
 #-----------------------------
-# k-mem (2022) fszostak
+# k-usage (2022) fszostak
 # Thu 24 Feb 2022 08:11:29 AM -03
 #
-# Show memory usage of namespace
+# Show cpu/memory usage of namespace
 
 if [ $# -eq 0 ]; then
-  echo "usage: k-mem <namespace>"
+  echo "usage: k-mem <namespace-prefix> <enviroment>"
   exit
 fi
 
-NAMESPACE=$1
+PREFIX=$1
+NAMESPACE=${PREFIX}-$2
 
 echo
 echo "$(date +'%F %T')"
@@ -19,4 +20,4 @@ SUM=0; for N in $(kubectl top pods -n $NAMESPACE| awk '{print $2 }' | sed 's/m//
 SUM=0; for N in $(kubectl top pods -n $NAMESPACE| awk '{print $3 }' | sed 's/Mi//' | grep -v MEMORY); do let SUM=$SUM+$N; done; echo "memory ${SUM}Mi"
 echo
 
-kubectl get nodes --no-headers | awk '{print $1}' | xargs -I {} sh -c 'echo {}; kubectl describe node {} | grep Allocated -A 5 | grep -ve Event -ve Allocated -ve percent -ve -- ; echo'
+kubectl get nodes --no-headers | awk '{print $1}' | xargs -I {} sh -c "echo {}; kubectl describe node {} | grep Allocated -A 5 | grep -ve Event -ve Allocated -ve percent -ve -- ; echo; kubectl describe node {} | egrep '$PREFIX|kube-system'; echo"

@@ -22,4 +22,4 @@ SUM=0; for N in $(kubectl top pods -n $NAMESPACE| awk '{print $2 }' | sed 's/m//
 SUM=0; for N in $(kubectl top pods -n $NAMESPACE| awk '{print $3 }' | sed 's/Mi//' | grep -v MEMORY); do let SUM=$SUM+$N; done; echo "memory ${SUM}Mi"
 echo
 
-kubectl get nodes --no-headers | awk '{print $1}' | xargs -I {} sh -c "kubectl describe node {} > /tmp/k-usage-$$; echo -n {}' - '; grep nodegroup-name /tmp/k-usage-$$ | sed 's/ //g'; echo; cat /tmp/k-usage-$$ | grep Allocated -A 5 | grep -ve Event -ve Allocated -ve percent -ve -- ; echo; egrep '$PREFIX|kube-system' /tmp/k-usage-$$; echo; echo 'See all infos with \"kubectl describe node {}\"'; echo; echo; rm /tmp/k-usage-$$"
+kubectl get nodes --no-headers | awk '{print $1}' | xargs -I {} sh -c "echo '----------------------------------------------------------'; kubectl describe node {} > /tmp/k-usage-$$; echo -n {}' - '; grep nodegroup-name /tmp/k-usage-$$ | sed 's/ //g'; echo; cat /tmp/k-usage-$$ | grep Allocated -A 5 | grep -ve Event -ve Allocated -ve percent -ve -- ; echo; egrep '$PREFIX|kube-system' /tmp/k-usage-$$; echo; echo 'See all infos with \"kubectl describe node {}\"'; echo; rm /tmp/k-usage-$$"

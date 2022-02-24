@@ -6,14 +6,26 @@
 # Show memory usage of namespace
 
 if [ $# -eq 0 ]; then
-  echo "usage: k-mem <namespace>"
+  echo "usage: k-mem <namespace> [-w] [sleep]"
   exit
 fi
 
 NAMESPACE=$1
+WATCH=$2
+SLEEP=$3
 
-echo "$(date +'%F %T')"
-echo "Usage of pods from $NAMESPACE"
-SUM=0; for N in $(kubectl top pods -n $NAMESPACE| awk '{print $2 }' | sed 's/m//' | grep -v CPU); do let SUM=$SUM+$N; done; echo "cpu ${SUM}m"
-SUM=0; for N in $(kubectl top pods -n $NAMESPACE| awk '{print $3 }' | sed 's/Mi//' | grep -v MEMORY); do let SUM=$SUM+$N; done; echo -n "memory ${SUM}Mi"
-echo
+if [ "$SLEEP" = "" ]; then
+	SLEEP=10
+fi
+
+while true
+do
+	echo -n "$(date +'%F %T');$NAMESPACE"
+	SUM=0; for N in $(kubectl top pods -n $NAMESPACE| awk '{print $2 }' | sed 's/m//' | grep -v CPU); do let SUM=$SUM+$N; done; echo -n ";cpu ${SUM}m"
+	SUM=0; for N in $(kubectl top pods -n $NAMESPACE| awk '{print $3 }' | sed 's/Mi//' | grep -v MEMORY); do let SUM=$SUM+$N; done; echo -n ";memory ${SUM}Mi"
+	echo
+	if [ "$WATCH" != "-w" ]; then
+		break
+	fi
+	sleep $SLEEP
+done

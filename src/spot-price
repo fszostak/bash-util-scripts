@@ -1,0 +1,24 @@
+#!/usr/bin/env bash
+
+if [ $# -eq 0 ]; then
+		echo "usage: $(basename $0) <aws-profile> <aws-region>"
+		exit
+fi
+
+AWS_PROFILE=$1
+AWS_REGION=$2
+
+for row in $(aws ec2 describe-spot-price-history --instance-types t3.large t3.medium m4.large c4.large c5.large m5.large m6i.large c6i.large --start-time $(date +'%FT%T') --end-time $(date +'%FT%T') --region $AWS_REGION --profile $AWS_PROFILE | jq -r '.SpotPriceHistory[] | @base64'); do
+    _jq() {
+     echo ${row} | base64 --decode | jq -r ${1}
+    }
+   AvailabilityZone=$(_jq '.AvailabilityZone')
+   InstanceType=$(_jq '.InstanceType')
+   ProductDescription=$(_jq '.ProductDescription')
+   SpotPrice=$(_jq '.SpotPrice')
+   Timestamp=$(_jq '.Timestamp')
+
+	 if [[ "$ProductDescription" == *"Linux/UNIX"* ]]; then
+		 echo $SpotPrice $InstanceType 
+	 fi
+done | sort

@@ -1,4 +1,7 @@
 #!/usr/bin/env bash
+#-----------------------------
+# spot-price (2022) fszostak
+# Wed Mar  2 08:53:31 PM -03 2022
 
 if [ $# -eq 0 ]; then
 		echo "usage: $(basename $0) <aws-profile> <aws-region>"

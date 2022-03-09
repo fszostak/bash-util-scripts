@@ -5,21 +5,27 @@
 #
 # Show cpu/memory usage of namespace
 
-if [ $# -eq 0 ]; then
-  echo "usage:   k-usage <namespace-prefix> <enviroment>"
+if [ "$1" = '-h' ]; then
+  echo "usage:   k-usage [<namespace-prefix> [<enviroment>]]"
   echo "example: k-usage my-portal production"
   echo "         for namespace my-portal-production"
+  echo "         k-usage"
+  echo "         for all namespaces"
   exit
 fi
 
 PREFIX=$1
-NAMESPACE=${PREFIX}-$2
 
-echo
-echo "$(date +'%F %T')"
-echo "Sum all pods of $NAMESPACE"
-SUM=0; for N in $(kubectl top pods -n $NAMESPACE| awk '{print $2 }' | sed 's/m//' | grep -v CPU); do let SUM=$SUM+$N; done; echo "cpu ${SUM}m"
-SUM=0; for N in $(kubectl top pods -n $NAMESPACE| awk '{print $3 }' | sed 's/Mi//' | grep -v MEMORY); do let SUM=$SUM+$N; done; echo "memory ${SUM}Mi"
-echo
+if [ "$PREFIX" != "" ];  then
+	NAMESPACE=${PREFIX}-$2
+	echo
+	echo "$(date +'%F %T')"
+	echo "Sum all pods of $NAMESPACE"
+	SUM=0; for N in $(kubectl top pods -n $NAMESPACE| awk '{print $2 }' | sed 's/m//' | grep -v CPU); do let SUM=$SUM+$N; done; echo "cpu ${SUM}m"
+	SUM=0; for N in $(kubectl top pods -n $NAMESPACE| awk '{print $3 }' | sed 's/Mi//' | grep -v MEMORY); do let SUM=$SUM+$N; done; echo "memory ${SUM}Mi"
+	echo
 
-kubectl get nodes --no-headers | awk '{print $1}' | xargs -I {} sh -c "echo '----------------------------------------------------------'; kubectl describe node {} > /tmp/k-usage-$$; echo -n {}' - '; grep nodegroup-name /tmp/k-usage-$$ | sed 's/ //g'; echo; cat /tmp/k-usage-$$ | grep Allocated -A 5 | grep -ve Event -ve Allocated -ve percent -ve -- ; echo; egrep '$PREFIX|kube-system' /tmp/k-usage-$$; echo; echo 'See all infos with \"kubectl describe node {}\"'; echo; rm /tmp/k-usage-$$"
+	kubectl get nodes --no-headers | awk '{print $1}' | xargs -I {} sh -c "echo '----------------------------------------------------------'; kubectl describe node {} > /tmp/k-usage-$$; echo -n {}' - '; grep nodegroup-name /tmp/k-usage-$$ | sed 's/ //g'; echo; cat /tmp/k-usage-$$ | grep Allocated -A 5 | grep -ve Event -ve Allocated -ve percent -ve -- ; echo; egrep '$PREFIX|kube-system' /tmp/k-usage-$$; echo; echo 'See all infos with \"kubectl describe node {}\"'; echo; rm /tmp/k-usage-$$"
+else
+	kubectl get nodes --no-headers | awk '{print $1}' | xargs -I {} sh -c "echo '----------------------------------------------------------'; kubectl describe node {} > /tmp/k-usage-$$; echo -n {}' - '; grep nodegroup-name /tmp/k-usage-$$ | sed 's/ //g'; echo; cat /tmp/k-usage-$$ | grep Allocated -A 5 | grep -ve Event -ve Allocated -ve percent -ve -- ; echo; grep '%)' /tmp/k-usage-$$; echo; echo 'See all infos with \"kubectl describe node {}\"'; echo; rm /tmp/k-usage-$$"
+fi

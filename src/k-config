@@ -9,10 +9,7 @@ TMP=/tmp/$(basename $0)$$.tmp
 #  exit
 #fi
 
-#grep "\- name: arn" ~/.kube/config | cut -f3 -d' ' > $TMP
 egrep "value:|\- name: arn" ~/.kube/config | sed '$!N;s/\n//' | sed 's/        value: /:/' | sed 's/- name://' | sed 's/ //g' > $TMP
-
-cat $TMP
 
 msg_bold "  k-config (2022) by fszostak"
 echo

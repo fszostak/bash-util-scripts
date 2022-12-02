@@ -1,0 +1,17 @@
+#!/bin/bash
+sudo bash -c 'find /var/log -name "*.gz" -exec rm {} \; ; sudo find /var/log -name "*.1" -exec rm {} \; ; > /var/log/apache2/access.log; > /var/log/apache2/error.log; > /var/log/auth.log; > /var/log/auth.log; > /var/log/kern.log; > /var/log/syslog'
+sudo rm -rf /var/log/*.gz /var/log/*.1 /var/log/*.old
+sudo apt autoremove --purge
+sudo apt autoclean
+sudo dpkg-reconfigure unattended-upgrades
+
+sudo snap set system refresh.retain=2
+sudo journalctl --vacuum-time=5d
+
+ #Removes old revisions of snaps
+ #CLOSE ALL SNAPS BEFORE RUNNING THIS
+ set -eu
+ LANG=en_US.UTF-8 snap list --all | awk '/disabled/{print $1, $3}' |
+ while read snapname revision; do
+		 sudo snap remove "$snapname" --revision="$revision"
+ done

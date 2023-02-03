@@ -4,7 +4,8 @@ if [ "$(uname)" = "Darwin" ]; then
   sudo powermetrics --samplers smc |grep -i "CPU die temperature"
 else
   while true; do 
-    sensors | egrep "Core|Package"
+    sensors | grep "RPM"
+    sensors | egrep "Core|Package|°C"
     sleep 10
     clear
   done

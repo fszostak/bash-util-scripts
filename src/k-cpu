@@ -1,0 +1,17 @@
+#!/usr/bin/env bash
+#-----------------------------
+# k-mem (2022) fszostak
+# Thu 24 Feb 2022 08:11:29 AM -03
+#
+# Show memory usage of namespace
+
+if [ $# -eq 0 ]; then
+  echo "usage: k-mem <namespace>"
+  exit
+fi
+
+NAMESPACE=$1
+
+echo
+SOMA=0; for N in $(kubectl top pods -n $NAMESPACE| awk '{print $3 }' | sed 's/Mi//' | grep -v MEMORY); do let SOMA=$SOMA+$N; done; echo "Namespace $NAMESPACE ${SOMA}Mi"
+echo

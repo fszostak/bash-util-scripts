@@ -3,5 +3,5 @@
 if [ "$1" = "describe" ]; then
 	kubectl describe node $(kubectl get nodes | awk '{ print $1 }' | grep -v 'NAME') | less
 else
-	kubectl get nodes
+	kubectl get nodes --label-columns=kubernetes.io/arch,beta.kubernetes.io/instance-type,lifecycle
 fi

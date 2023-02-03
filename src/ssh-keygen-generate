@@ -24,6 +24,7 @@ cd ~/.ssh
 [ $? -ne 0 ] && exit
 
 ssh-keygen -t rsa -f $KEY_NAME -P "" -C "$USER"
+#ssh-keygen -t ed25519 -f $KEY_NAME -P "" -C "$USER"
 [ $? -ne 0 ] && exit
 
 mv $KEY_NAME $KEY_NAME.pem
